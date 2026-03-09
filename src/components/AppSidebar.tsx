@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut, Search, Users, Repeat } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut, Search, Users, Repeat, Megaphone } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
