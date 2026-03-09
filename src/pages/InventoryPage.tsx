@@ -228,16 +228,16 @@ const InventoryPage = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-4 gap-4">
         {[
           { label: "Total", value: stats.total, icon: Car, accent: "text-foreground" },
-          { label: "Disponíveis", value: stats.available, icon: Car, accent: "text-emerald-600" },
-          { label: "Reservados", value: stats.reserved, icon: Shield, accent: "text-amber-600" },
-          { label: "Vendidos", value: stats.sold, icon: DollarSign, accent: "text-primary" },
+          { label: "Disponíveis", value: stats.available, icon: Car, accent: "text-success" },
+          { label: "Reservados", value: stats.reserved, icon: Shield, accent: "text-warning" },
+          { label: "Vendidos", value: stats.sold, icon: DollarSign, accent: "text-accent" },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }} className="stat-card flex items-center gap-4">
-            <div className={`p-2.5 rounded-xl bg-secondary ${s.accent}`}>
+            transition={{ delay: i * 0.05 }} className="glass-card p-5 flex items-center gap-4">
+            <div className={`p-2.5 rounded-xl bg-muted/50 ${s.accent}`}>
               <s.icon className="w-5 h-5" />
             </div>
             <div>
