@@ -97,7 +97,7 @@ const InboxPage = () => {
               key={conv.id}
               onClick={() => setSelectedId(conv.id)}
               whileTap={{ scale: 0.98 }}
-              className={`w-full text-left p-4 border-b transition-all duration-200 ${selectedId === conv.id ? "bg-secondary" : "hover:bg-secondary/30"}`}
+              className={`w-full text-left p-4 border-b border-border/30 transition-all duration-200 ${selectedId === conv.id ? "bg-accent/5 border-l-2 border-l-accent" : "hover:bg-muted/30"}`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold shrink-0">
