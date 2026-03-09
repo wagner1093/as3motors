@@ -98,35 +98,35 @@ const PipelinePage = () => {
   }, 0);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
-      {/* Header with sticky buttons */}
-      <div className="shrink-0 pb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {totalDeals} negócios · R$ {(totalValue / 1000).toFixed(0)}k em pipeline
-          </p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            className="filter-pill flex items-center gap-2"
-            onClick={() => toast({ title: "Filtros", description: "Funcionalidade de filtros será conectada ao backend." })}
-          >
-            <Filter className="w-4 h-4" />
-            Filtrar
-          </button>
-          <button
-            className="filter-pill active flex items-center gap-2"
-            onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox e inicie uma conversa para criar um negócio." })}
-          >
-            <Plus className="w-4 h-4" />
-            Novo Negócio
-          </button>
-        </div>
+    <div className="relative flex flex-col min-w-0 overflow-hidden h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
+      {/* Fixed actions in the visible viewport of the tab */}
+      <div className="absolute top-0 right-0 z-30 flex items-center gap-3">
+        <button
+          className="filter-pill flex items-center gap-2"
+          onClick={() => toast({ title: "Filtros", description: "Funcionalidade de filtros será conectada ao backend." })}
+        >
+          <Filter className="w-4 h-4" />
+          Filtrar
+        </button>
+        <button
+          className="filter-pill active flex items-center gap-2"
+          onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox e inicie uma conversa para criar um negócio." })}
+        >
+          <Plus className="w-4 h-4" />
+          Novo Negócio
+        </button>
+      </div>
+
+      {/* Header */}
+      <div className="shrink-0 pb-6 pr-[280px]">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Pipeline</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {totalDeals} negócios · R$ {(totalValue / 1000).toFixed(0)}k em pipeline
+        </p>
       </div>
 
       {/* Scrollable Kanban */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden -mx-6 lg:-mx-8 px-6 lg:px-8">
+      <div className="flex-1 min-w-0 overflow-x-auto overflow-y-hidden -mx-6 lg:-mx-8 px-6 lg:px-8">
         <div className="flex gap-4 h-full pb-4" style={{ minWidth: "fit-content" }}>
           {PIPELINE_STAGES.map((stage, stageIdx) => {
             const stageDeals = deals.filter(d => d.stage === stage.key);
