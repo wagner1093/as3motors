@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut, Search } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut, Search, Users } from "lucide-react";
 import { motion } from "framer-motion";
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/pipeline", icon: Kanban, label: "Pipeline" },
   { to: "/estoque", icon: Car, label: "Estoque" },
   { to: "/followup", icon: RotateCcw, label: "Follow-up" },
+  { to: "/lista-inteligente", icon: Users, label: "Lista Inteligente" },
 ];
 
 const AppSidebar = () => {

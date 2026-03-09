@@ -1,4 +1,4 @@
-import { Conversation, Message, Vehicle, Deal, Contact, FollowupSequence, FollowupStep, FollowupEnrollment } from "@/types/crm";
+import { Conversation, Message, Vehicle, Deal, Contact, FollowupSequence, FollowupStep, FollowupEnrollment, WaitlistProfile, WaitlistPreferences, WaitlistMatch, WaitlistNotification, ModelSimilarity } from "@/types/crm";
 
 export const mockContacts: Contact[] = [
   { id: "c1", full_name: "Carlos Silva", phone_e164: "+5511999001122", email: "carlos@email.com", created_at: "2025-03-01" },
@@ -112,3 +112,94 @@ export const PIPELINE_STAGES = [
   { key: "won", label: "Ganho ✅", color: "bg-success/20" },
   { key: "lost", label: "Perdido ❌", color: "bg-destructive/10" },
 ] as const;
+
+export const mockModelSimilarity: ModelSimilarity[] = [
+  { id: "ms1", model_key: "corolla", similar_model_key: "civic", weight: 90, created_at: "2025-01-01" },
+  { id: "ms2", model_key: "corolla", similar_model_key: "sentra", weight: 80, created_at: "2025-01-01" },
+  { id: "ms3", model_key: "corolla", similar_model_key: "city", weight: 70, created_at: "2025-01-01" },
+  { id: "ms4", model_key: "civic", similar_model_key: "corolla", weight: 90, created_at: "2025-01-01" },
+  { id: "ms5", model_key: "civic", similar_model_key: "sentra", weight: 75, created_at: "2025-01-01" },
+  { id: "ms6", model_key: "t-cross", similar_model_key: "tracker", weight: 85, created_at: "2025-01-01" },
+  { id: "ms7", model_key: "tracker", similar_model_key: "t-cross", weight: 85, created_at: "2025-01-01" },
+  { id: "ms8", model_key: "pulse", similar_model_key: "t-cross", weight: 70, created_at: "2025-01-01" },
+];
+
+export const mockWaitlistProfiles: WaitlistProfile[] = [
+  {
+    id: "wl1", contact_id: "c3", contact: mockContacts[2],
+    status: "active", priority_score: 85,
+    notes: "Tem filhos, precisa de porta-malas grande. Prefere carro econômico para uso urbano.",
+    created_at: "2025-03-03", updated_at: "2025-03-08",
+  },
+  {
+    id: "wl2", contact_id: "c4", contact: mockContacts[3],
+    status: "active", priority_score: 60,
+    notes: "Primeiro carro, orçamento apertado. Quer algo confiável.",
+    created_at: "2025-03-04", updated_at: "2025-03-07",
+  },
+  {
+    id: "wl3", contact_id: "c2", contact: mockContacts[1],
+    status: "paused", priority_score: 70,
+    notes: "Está avaliando troca do HB20 por sedan maior. Não tem pressa.",
+    created_at: "2025-03-02", updated_at: "2025-03-06",
+  },
+];
+
+export const mockWaitlistPreferences: Record<string, WaitlistPreferences> = {
+  wl1: {
+    waitlist_id: "wl1", body_type: "suv", preferred_makes: ["volkswagen", "chevrolet"],
+    preferred_models: ["t-cross", "tracker"], min_year: 2022, max_year: 2025,
+    min_price: 90000, max_price: 140000, must_have: ["porta_malas_grande", "familia", "economico"],
+    avoid: ["manual"], payment_preference: "financiamento", has_kids: true, trunk_priority: 9, updated_at: "2025-03-08",
+  },
+  wl2: {
+    waitlist_id: "wl2", body_type: "hatch", preferred_makes: ["hyundai", "fiat"],
+    preferred_models: ["hb20", "pulse"], min_year: 2021, max_year: 2025,
+    min_price: 60000, max_price: 110000, must_have: ["economico"],
+    avoid: null, payment_preference: "financiamento", has_kids: false, trunk_priority: 3, updated_at: "2025-03-07",
+  },
+  wl3: {
+    waitlist_id: "wl3", body_type: "sedan", preferred_makes: ["toyota", "honda"],
+    preferred_models: ["corolla", "civic"], min_year: 2022, max_year: 2025,
+    min_price: 100000, max_price: 180000, must_have: ["porta_malas_grande"],
+    avoid: null, payment_preference: "troca", has_kids: false, trunk_priority: 7, updated_at: "2025-03-06",
+  },
+};
+
+export const mockWaitlistMatches: WaitlistMatch[] = [
+  {
+    id: "wm1", waitlist_id: "wl1", vehicle_id: "v3", vehicle: mockVehicles[2], match_score: 92,
+    match_reasons: { model_exact: true, body_type: true, price_ok: true, year_ok: true, must_have_hit: true },
+    status: "suggested", created_at: "2025-03-08",
+  },
+  {
+    id: "wm2", waitlist_id: "wl1", vehicle_id: "v4", vehicle: mockVehicles[3], match_score: 78,
+    match_reasons: { model_exact: false, model_similar: true, body_type: true, price_ok: true, year_ok: true, must_have_hit: false },
+    status: "contacted", created_at: "2025-03-07",
+  },
+  {
+    id: "wm3", waitlist_id: "wl2", vehicle_id: "v6", vehicle: mockVehicles[5], match_score: 75,
+    match_reasons: { model_exact: false, model_similar: true, body_type: false, price_ok: true, year_ok: true, must_have_hit: true },
+    status: "suggested", created_at: "2025-03-09",
+  },
+  {
+    id: "wm4", waitlist_id: "wl3", vehicle_id: "v1", vehicle: mockVehicles[0], match_score: 88,
+    match_reasons: { model_exact: true, body_type: true, price_ok: true, year_ok: true, must_have_hit: true },
+    status: "suggested", created_at: "2025-03-09",
+  },
+  {
+    id: "wm5", waitlist_id: "wl3", vehicle_id: "v2", vehicle: mockVehicles[1], match_score: 82,
+    match_reasons: { model_exact: true, model_similar: false, body_type: true, price_ok: true, year_ok: true, must_have_hit: true },
+    status: "suggested", created_at: "2025-03-09",
+  },
+];
+
+export const mockWaitlistNotifications: WaitlistNotification[] = [
+  {
+    id: "wn1", waitlist_id: "wl1", vehicle_id: "v4", vehicle: mockVehicles[3],
+    message_text: "Oi Pedro, tudo bem? Chegou um Tracker Premier 2022 que parece bem com o que você estava buscando. Quer que eu te mande mais detalhes e condições?",
+    sent_at: "2025-03-07T14:30:00Z", result: { status: "delivered" },
+  },
+];
+
+export const defaultMessageTemplate = "Oi {nome}, tudo bem? Chegou um {modelo} {ano} que parece bem com o que você estava buscando. Quer que eu te mande mais detalhes e condições?";

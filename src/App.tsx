@@ -9,6 +9,7 @@ import InboxPage from "@/pages/InboxPage";
 import PipelinePage from "@/pages/PipelinePage";
 import InventoryPage from "@/pages/InventoryPage";
 import FollowupPage from "@/pages/FollowupPage";
+import WaitlistPage from "@/pages/WaitlistPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/pipeline" element={<PipelinePage />} />
             <Route path="/estoque" element={<InventoryPage />} />
             <Route path="/followup" element={<FollowupPage />} />
+            <Route path="/lista-inteligente" element={<WaitlistPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
