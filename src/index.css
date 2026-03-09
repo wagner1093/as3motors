@@ -148,7 +148,7 @@
 
   .kanban-column {
     @apply rounded-2xl p-4 min-w-[300px] flex flex-col;
-    background: hsl(var(--secondary));
+    background: hsl(var(--muted) / 0.7);
   }
   .kanban-card {
     @apply bg-card rounded-xl border p-4 cursor-grab transition-all duration-200;
