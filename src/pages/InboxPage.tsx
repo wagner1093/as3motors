@@ -192,7 +192,7 @@ const InboxPage = () => {
               <Bot className="w-4 h-4 text-accent" />
               <h3 className="text-sm font-semibold">Análise IA</h3>
             </div>
-            <div className="p-3 rounded-xl bg-secondary">
+             <div className="p-3 rounded-xl bg-muted/40 backdrop-blur-sm border border-border/30">
               <p className="text-sm text-muted-foreground leading-relaxed">{selected.ai_summary}</p>
             </div>
             <div className="mt-3 flex items-center gap-2">
