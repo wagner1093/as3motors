@@ -238,28 +238,30 @@ const WaitlistPage = () => {
               <Download className="w-4 h-4" /> Exportar CSV
             </Button>
             <Button variant="outline" size="icon" className="rounded-xl"
-              onClick={() => setViewMode(v => v === "cards" ? "table" : "cards")}>
+              onClick={() => setViewMode(v => v === "cards" ? "table" : "cards")}
+              title={viewMode === "cards" ? "Ver tabela" : "Ver cards"}>
               <List className="w-4 h-4" />
             </Button>
           </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)}
-                className="pl-9 w-64 rounded-xl bg-card border h-10" />
-            </div>
-            <div className="flex gap-1.5">
-              {[
-                { key: "all", label: "Todos" },
-                { key: "active", label: "Ativos" },
-                { key: "paused", label: "Pausados" },
-                { key: "converted", label: "Convertidos" },
-              ].map(f => (
-                <button key={f.key} onClick={() => setStatusFilter(f.key)}
-                  className={`filter-pill text-xs ${statusFilter === f.key ? "active" : ""}`}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
+        </div>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)}
+              className="pl-9 w-64 rounded-xl bg-card border h-10" />
+          </div>
+          <div className="flex gap-1.5">
+            {[
+              { key: "all", label: "Todos" },
+              { key: "active", label: "Ativos" },
+              { key: "paused", label: "Pausados" },
+              { key: "converted", label: "Convertidos" },
+            ].map(f => (
+              <button key={f.key} onClick={() => setStatusFilter(f.key)}
+                className={`filter-pill text-xs ${statusFilter === f.key ? "active" : ""}`}>
+                {f.label}
+              </button>
+            ))}
           </div>
         </div>
 
