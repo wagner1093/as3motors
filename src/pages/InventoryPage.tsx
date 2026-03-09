@@ -376,6 +376,7 @@ const InventoryPage = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </div>
             </motion.div>
           );
         })}
