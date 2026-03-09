@@ -146,7 +146,7 @@ const WaitlistPage = () => {
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [search, statusFilter]);
+  }, [search, statusFilter, profiles]);
 
   const profileMatches = useMemo(() => {
     if (!selectedProfile) return [];
