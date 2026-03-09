@@ -100,7 +100,7 @@ const PipelinePage = () => {
   return (
     <div className="relative flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
       {/* Action buttons - fixed top right */}
-      <div className="absolute top-0 right-0 z-20 flex items-center gap-3">
+      <div className="sticky top-0 right-0 z-20 flex items-center gap-3 self-end mb-[-2.5rem]">
         <button
           className="filter-pill flex items-center gap-2"
           onClick={() => toast({ title: "Filtros", description: "Funcionalidade de filtros será conectada ao backend." })}
