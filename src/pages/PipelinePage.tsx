@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { mockDeals, mockConversations, mockVehicles, PIPELINE_STAGES } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Mail, Car, CreditCard, Calendar, Clock, ArrowRightLeft, ChevronRight, Flame, Snowflake, Sun, MessageSquare, MoreHorizontal, Plus, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const paymentLabels: Record<string, string> = {
   a_vista: "À Vista",
@@ -16,6 +19,8 @@ const paymentLabels: Record<string, string> = {
 
 const PipelinePage = () => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const getDealData = (deal: typeof mockDeals[0]) => {
     const conv = mockConversations.find(c => c.id === deal.conversation_id);
@@ -46,11 +51,13 @@ const PipelinePage = () => {
           <p>Acompanhe suas negociações em cada etapa</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="filter-pill flex items-center gap-2">
+          <button className="filter-pill flex items-center gap-2"
+            onClick={() => toast({ title: "Filtros", description: "Funcionalidade de filtros será conectada ao backend." })}>
             <Filter className="w-4 h-4" />
             Filtrar
           </button>
-          <button className="filter-pill active flex items-center gap-2">
+          <button className="filter-pill active flex items-center gap-2"
+            onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox e inicie uma conversa para criar um negócio." })}>
             <Plus className="w-4 h-4" />
             Novo Negócio
           </button>
@@ -69,7 +76,6 @@ const PipelinePage = () => {
               transition={{ delay: stageIdx * 0.05, duration: 0.4 }}
               className="kanban-column min-w-[320px] max-w-[340px]"
             >
-              {/* Column header */}
               <div className="flex items-center justify-between mb-4 px-1">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold text-foreground">{stage.label}</h3>
@@ -84,7 +90,6 @@ const PipelinePage = () => {
                 )}
               </div>
 
-              {/* Cards */}
               <div className="space-y-3 flex-1">
                 <AnimatePresence>
                   {stageDeals.map((deal, i) => {
@@ -105,7 +110,6 @@ const PipelinePage = () => {
                         className="kanban-card"
                         onClick={() => setExpandedCard(isExpanded ? null : deal.id)}
                       >
-                        {/* Header: name + interest */}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-sm font-semibold text-foreground border border-border">
@@ -116,12 +120,34 @@ const PipelinePage = () => {
                               <p className="text-xs text-muted-foreground">{conv.contact.phone_e164}</p>
                             </div>
                           </div>
-                          <button className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-secondary">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-secondary"
+                                onClick={e => e.stopPropagation()}>
+                                <MoreHorizontal className="w-4 h-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => navigate(`/inbox?conv=${conv.id}`)}>
+                                <MessageSquare className="w-4 h-4 mr-2" /> Abrir conversa
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                toast({ title: "✅ Negócio marcado como Ganho", description: conv.contact.full_name });
+                              }}>
+                                ✅ Marcar como Ganho
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                toast({ title: "❌ Negócio marcado como Perdido", description: conv.contact.full_name, variant: "destructive" });
+                              }}>
+                                ❌ Marcar como Perdido
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigate("/followup")}>
+                                <RotateCcw className="w-4 h-4 mr-2" /> Iniciar Follow-up
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
 
-                        {/* Interest badge + score */}
                         <div className="flex items-center gap-2 mb-3">
                           <span className={`${interest.className} flex items-center gap-1`}>
                             <InterestIcon className="w-3 h-3" />
@@ -135,9 +161,9 @@ const PipelinePage = () => {
                           )}
                         </div>
 
-                        {/* Vehicle info */}
                         {vehicle && (
-                          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/80 mb-3">
+                          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/80 mb-3 cursor-pointer hover:bg-secondary transition-colors"
+                            onClick={(e) => { e.stopPropagation(); navigate("/estoque"); }}>
                             <Car className="w-4 h-4 text-muted-foreground shrink-0" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium truncate">
@@ -151,7 +177,6 @@ const PipelinePage = () => {
                           </div>
                         )}
 
-                        {/* Payment + deal info */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="outline" className="text-[11px] font-medium gap-1">
                             <CreditCard className="w-3 h-3" />
@@ -165,7 +190,6 @@ const PipelinePage = () => {
                           )}
                         </div>
 
-                        {/* Expanded details */}
                         <AnimatePresence>
                           {isExpanded && (
                             <motion.div
@@ -176,7 +200,6 @@ const PipelinePage = () => {
                               className="overflow-hidden"
                             >
                               <div className="mt-3 pt-3 border-t space-y-3">
-                                {/* AI Summary */}
                                 <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
                                   <p className="text-[11px] font-semibold text-accent-foreground mb-1 flex items-center gap-1">
                                     <MessageSquare className="w-3 h-3" /> Resumo IA
@@ -184,7 +207,6 @@ const PipelinePage = () => {
                                   <p className="text-xs text-muted-foreground leading-relaxed">{conv.ai_summary}</p>
                                 </div>
 
-                                {/* Trade-in details */}
                                 {deal.tradein_description && (
                                   <div className="text-xs space-y-1">
                                     <p className="font-medium flex items-center gap-1">
@@ -198,22 +220,25 @@ const PipelinePage = () => {
                                   </div>
                                 )}
 
-                                {/* Contact actions */}
                                 <div className="flex gap-2">
-                                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors">
+                                  <a href={`tel:${conv.contact.phone_e164}`}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
+                                    onClick={e => e.stopPropagation()}>
                                     <Phone className="w-3.5 h-3.5" /> Ligar
-                                  </button>
-                                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors">
+                                  </a>
+                                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/inbox?conv=${conv.id}`); }}>
                                     <MessageSquare className="w-3.5 h-3.5" /> Chat
                                   </button>
                                   {conv.contact.email && (
-                                    <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors">
+                                    <a href={`mailto:${conv.contact.email}`}
+                                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
+                                      onClick={e => e.stopPropagation()}>
                                       <Mail className="w-3.5 h-3.5" /> Email
-                                    </button>
+                                    </a>
                                   )}
                                 </div>
 
-                                {/* Last message time */}
                                 <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   Última msg: {format(new Date(conv.last_message_at), "dd MMM, HH:mm", { locale: ptBR })}
@@ -223,7 +248,6 @@ const PipelinePage = () => {
                           )}
                         </AnimatePresence>
 
-                        {/* Next action */}
                         {deal.next_action && (
                           <div className="mt-3 pt-3 border-t flex items-start gap-2">
                             <Calendar className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />

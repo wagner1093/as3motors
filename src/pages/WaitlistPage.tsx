@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { mockWaitlistProfiles, mockWaitlistPreferences, mockWaitlistMatches, mockWaitlistNotifications, defaultMessageTemplate } from "@/data/mockData";
-import { WaitlistProfile, WaitlistMatch, WaitlistNotification } from "@/types/crm";
+import { WaitlistProfile, WaitlistMatch } from "@/types/crm";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
   Baby, Briefcase, Sparkles, AlertCircle
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const statusConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   active: { label: "Ativo", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50" },
@@ -66,6 +68,9 @@ const WaitlistPage = () => {
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [sendMatch, setSendMatch] = useState<WaitlistMatch | null>(null);
   const [messageText, setMessageText] = useState("");
+  const [dismissedMatches, setDismissedMatches] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const filteredProfiles = useMemo(() => {
     return mockWaitlistProfiles.filter(p => {
@@ -79,9 +84,9 @@ const WaitlistPage = () => {
   const profileMatches = useMemo(() => {
     if (!selectedProfile) return [];
     return mockWaitlistMatches
-      .filter(m => m.waitlist_id === selectedProfile.id)
+      .filter(m => m.waitlist_id === selectedProfile.id && !dismissedMatches.has(m.id))
       .sort((a, b) => b.match_score - a.match_score);
-  }, [selectedProfile]);
+  }, [selectedProfile, dismissedMatches]);
 
   const profileNotifications = useMemo(() => {
     if (!selectedProfile) return [];
@@ -101,6 +106,19 @@ const WaitlistPage = () => {
     setMessageText(text);
     setSendMatch(match);
     setSendDialogOpen(true);
+  };
+
+  const confirmSendWhatsApp = () => {
+    setSendDialogOpen(false);
+    toast({
+      title: "✅ WhatsApp enviado!",
+      description: `Mensagem enviada para ${selectedProfile?.contact.full_name}. Match atualizado para "Contatado".`,
+    });
+  };
+
+  const handleDismissMatch = (matchId: string) => {
+    setDismissedMatches(prev => new Set(prev).add(matchId));
+    toast({ title: "Match dispensado", description: "O match foi removido da lista de sugestões." });
   };
 
   const matchCountByProfile = useMemo(() => {
@@ -242,17 +260,27 @@ const WaitlistPage = () => {
             <div>
               <h2 className="text-xl font-bold">{selectedProfile.contact.full_name}</h2>
               <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{selectedProfile.contact.phone_e164}</span>
+                <a href={`tel:${selectedProfile.contact.phone_e164}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                  <Phone className="w-3.5 h-3.5" />{selectedProfile.contact.phone_e164}
+                </a>
                 {selectedProfile.contact.email && (
-                  <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{selectedProfile.contact.email}</span>
+                  <a href={`mailto:${selectedProfile.contact.email}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                    <Mail className="w-3.5 h-3.5" />{selectedProfile.contact.email}
+                  </a>
                 )}
               </div>
             </div>
           </div>
-          <span className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full ${st.color}`}>
-            <st.icon className="w-4 h-4" />
-            {st.label}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full ${st.color}`}>
+              <st.icon className="w-4 h-4" />
+              {st.label}
+            </span>
+            <Button variant="outline" size="sm" className="rounded-xl text-xs"
+              onClick={() => navigate(`/inbox`)}>
+              <MessageSquare className="w-3.5 h-3.5 mr-1" /> Ver conversa
+            </Button>
+          </div>
         </div>
         {selectedProfile.notes && (
           <div className="mt-4 p-3 rounded-xl bg-secondary text-sm text-muted-foreground">
@@ -374,7 +402,8 @@ const WaitlistPage = () => {
                   <motion.div key={match.id} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.06 }} className="stat-card">
                     <div className="flex items-start gap-4">
-                      <div className="w-20 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                      <div className="w-20 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0 cursor-pointer hover:bg-muted transition-colors"
+                        onClick={() => navigate("/estoque")}>
                         <Car className="w-8 h-8 text-muted-foreground/20" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -407,11 +436,13 @@ const WaitlistPage = () => {
                           onClick={() => handleSendWhatsApp(match)}>
                           <Send className="w-3.5 h-3.5" /> WhatsApp
                         </Button>
-                        <Button size="sm" variant="ghost" className="rounded-xl text-xs gap-1.5 h-8">
+                        <Button size="sm" variant="ghost" className="rounded-xl text-xs gap-1.5 h-8"
+                          onClick={() => navigate("/estoque")}>
                           <Eye className="w-3.5 h-3.5" /> Ver veículo
                         </Button>
                         {match.status === "suggested" && (
-                          <Button size="sm" variant="ghost" className="rounded-xl text-xs gap-1.5 h-8 text-muted-foreground">
+                          <Button size="sm" variant="ghost" className="rounded-xl text-xs gap-1.5 h-8 text-muted-foreground"
+                            onClick={() => handleDismissMatch(match.id)}>
                             <X className="w-3.5 h-3.5" /> Dispensar
                           </Button>
                         )}
@@ -470,7 +501,7 @@ const WaitlistPage = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSendDialogOpen(false)} className="rounded-xl">Cancelar</Button>
-            <Button onClick={() => { setSendDialogOpen(false); }} className="rounded-xl gap-2">
+            <Button onClick={confirmSendWhatsApp} className="rounded-xl gap-2">
               <Send className="w-4 h-4" /> Enviar
             </Button>
           </DialogFooter>

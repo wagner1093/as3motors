@@ -1,6 +1,7 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut, Search, Users } from "lucide-react";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -13,11 +14,18 @@ const navItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    toast({ title: "Você saiu do sistema" });
+    navigate("/login");
+  };
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 z-40 flex flex-col" style={{ width: "var(--sidebar-width)", background: "hsl(var(--sidebar-bg))" }}>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-6">
+      <div className="flex items-center gap-3 px-6 py-6 cursor-pointer" onClick={() => navigate("/")}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--sidebar-accent))" }}>
           <Car className="w-5 h-5" style={{ color: "hsl(var(--sidebar-bg))" }} />
         </div>
@@ -26,7 +34,7 @@ const AppSidebar = () => {
 
       {/* Search */}
       <div className="px-4 mb-4">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm" style={{ background: "hsl(var(--sidebar-hover))", color: "hsl(var(--sidebar-fg))" }}>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm cursor-pointer hover:opacity-80 transition-opacity" style={{ background: "hsl(var(--sidebar-hover))", color: "hsl(var(--sidebar-fg))" }}>
           <Search className="w-4 h-4" />
           <span className="text-xs">Buscar...</span>
           <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded" style={{ background: "hsl(0 0% 20%)" }}>⌘K</span>
@@ -59,7 +67,7 @@ const AppSidebar = () => {
       </nav>
 
       <div className="px-3 pb-6">
-        <button className="sidebar-link w-full opacity-60 hover:opacity-100">
+        <button onClick={handleLogout} className="sidebar-link w-full opacity-60 hover:opacity-100">
           <LogOut className="w-5 h-5" />
           <span>Sair</span>
         </button>
