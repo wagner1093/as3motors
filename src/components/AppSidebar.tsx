@@ -40,7 +40,7 @@ const AppSidebar = () => {
               key={item.to}
               to={item.to}
               end={item.to === "/"}
-              className={`sidebar-link ${isActive ? "active" : ""}`}
+              className={`sidebar-link relative ${isActive ? "active" : ""}`}
             >
               {isActive && (
                 <motion.div
