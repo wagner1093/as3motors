@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockWaitlistProfiles, mockWaitlistPreferences, mockWaitlistMatches, mockWaitlistNotifications, defaultMessageTemplate } from "@/data/mockData";
-import { WaitlistProfile, WaitlistMatch } from "@/types/crm";
+import { mockWaitlistProfiles, mockWaitlistPreferences, mockWaitlistMatches, mockWaitlistNotifications, defaultMessageTemplate, mockContacts } from "@/data/mockData";
+import { Contact, WaitlistProfile, WaitlistPreferences, WaitlistMatch } from "@/types/crm";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
