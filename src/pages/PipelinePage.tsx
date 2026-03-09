@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { mockDeals, mockConversations, mockVehicles, PIPELINE_STAGES } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, Mail, Car, CreditCard, Calendar, Clock, ArrowRightLeft, ChevronRight, Flame, Snowflake, Sun, MessageSquare, MoreHorizontal, Plus, Filter } from "lucide-react";
+import { Phone, Mail, Car, CreditCard, Calendar, Clock, ArrowRightLeft, ChevronRight, Flame, Snowflake, Sun, MessageSquare, MoreHorizontal, Plus, Filter, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
