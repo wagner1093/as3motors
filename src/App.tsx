@@ -11,6 +11,7 @@ import InventoryPage from "@/pages/InventoryPage";
 import FollowupPage from "@/pages/FollowupPage";
 import WaitlistPage from "@/pages/WaitlistPage";
 import RepassePage from "@/pages/RepassePage";
+import AdsPage from "@/pages/AdsPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/NotFound";
 
