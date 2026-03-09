@@ -3,9 +3,9 @@ import AppSidebar from "./AppSidebar";
 
 const AppLayout = () => {
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background">
       <AppSidebar />
-      <main className="flex-1" style={{ marginLeft: "var(--sidebar-width)" }}>
+      <main className="flex-1 min-h-screen" style={{ marginLeft: "var(--sidebar-width)" }}>
         <Outlet />
       </main>
     </div>
