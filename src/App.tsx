@@ -10,6 +10,7 @@ import PipelinePage from "@/pages/PipelinePage";
 import InventoryPage from "@/pages/InventoryPage";
 import FollowupPage from "@/pages/FollowupPage";
 import WaitlistPage from "@/pages/WaitlistPage";
+import RepassePage from "@/pages/RepassePage";
 import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/NotFound";
 
