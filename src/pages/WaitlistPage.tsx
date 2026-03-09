@@ -87,8 +87,32 @@ const WaitlistPage = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
   const [profiles, setProfiles] = useState<WaitlistProfile[]>(mockWaitlistProfiles);
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const exportCSV = () => {
+    const headers = ["Nome", "Telefone", "Email", "Status", "Prioridade", "Carroceria", "Modelos", "Marcas", "Preço Min", "Preço Max", "Ano Min", "Ano Max", "Pagamento", "Requisitos", "Observações"];
+    const rows = profiles.map(p => {
+      const pr = mockWaitlistPreferences[p.id];
+      return [
+        p.contact.full_name, p.contact.phone_e164, p.contact.email || "",
+        p.status, p.priority_score || "",
+        pr?.body_type || "", pr?.preferred_models?.join(";") || "", pr?.preferred_makes?.join(";") || "",
+        pr?.min_price || "", pr?.max_price || "", pr?.min_year || "", pr?.max_year || "",
+        pr?.payment_preference || "", pr?.must_have?.join(";") || "", p.notes || "",
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+    });
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `lista-inteligente-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "✅ Lista exportada!", description: `${profiles.length} contatos exportados em CSV.` });
+  };
 
   const updateForm = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }));
 
