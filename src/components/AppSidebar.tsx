@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut, Search, Users } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut, Search, Users, Repeat } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
@@ -10,6 +10,7 @@ const navItems = [
   { to: "/estoque", icon: Car, label: "Estoque" },
   { to: "/followup", icon: RotateCcw, label: "Follow-up" },
   { to: "/lista-inteligente", icon: Users, label: "Lista Inteligente" },
+  { to: "/repasse", icon: Repeat, label: "Grupos de Repasse" },
 ];
 
 const AppSidebar = () => {
