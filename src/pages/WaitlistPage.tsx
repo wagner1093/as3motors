@@ -286,59 +286,105 @@ const WaitlistPage = () => {
           ))}
         </div>
 
-        {/* Profile list */}
-        <div className="space-y-3">
-          {filteredProfiles.map((profile, i) => {
-            const st = statusConfig[profile.status];
-            const matchCount = matchCountByProfile[profile.id] || 0;
-            const lastNotif = mockWaitlistNotifications.filter(n => n.waitlist_id === profile.id).sort((a, b) => b.sent_at.localeCompare(a.sent_at))[0];
-            return (
-              <motion.div
-                key={profile.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-                onClick={() => setSelectedProfile(profile)}
-                className="stat-card flex items-center gap-5 cursor-pointer group"
-              >
-                <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">
-                  {profile.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-semibold text-sm">{profile.contact.full_name}</span>
-                    <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${st.color}`}>
-                      <st.icon className="w-3 h-3" />
-                      {st.label}
-                    </span>
-                    {matchCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                        <Sparkles className="w-3 h-3" />
-                        {matchCount} match{matchCount > 1 ? "es" : ""}
-                      </span>
-                    )}
+        {/* Profile list - Cards */}
+        {viewMode === "cards" && (
+          <div className="space-y-3">
+            {filteredProfiles.map((profile, i) => {
+              const st = statusConfig[profile.status];
+              const matchCount = matchCountByProfile[profile.id] || 0;
+              const lastNotif = mockWaitlistNotifications.filter(n => n.waitlist_id === profile.id).sort((a, b) => b.sent_at.localeCompare(a.sent_at))[0];
+              return (
+                <motion.div
+                  key={profile.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  onClick={() => setSelectedProfile(profile)}
+                  className="stat-card flex items-center gap-5 cursor-pointer group"
+                >
+                  <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">
+                    {profile.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{getProfileSummary(profile.id)}</p>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground shrink-0">
-                  {profile.priority_score && (
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5" />
-                      <span className="font-medium">{profile.priority_score}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-semibold text-sm">{profile.contact.full_name}</span>
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${st.color}`}>
+                        <st.icon className="w-3 h-3" />
+                        {st.label}
+                      </span>
+                      {matchCount > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-accent text-accent-foreground border border-border">
+                          <Sparkles className="w-3 h-3" />
+                          {matchCount} match{matchCount > 1 ? "es" : ""}
+                        </span>
+                      )}
                     </div>
-                  )}
-                  {lastNotif && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{new Date(lastNotif.sent_at).toLocaleDateString("pt-BR")}</span>
-                    </div>
-                  )}
-                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                    <p className="text-xs text-muted-foreground truncate">{getProfileSummary(profile.id)}</p>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground shrink-0">
+                    {profile.priority_score && (
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5" />
+                        <span className="font-medium">{profile.priority_score}</span>
+                      </div>
+                    )}
+                    {lastNotif && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{new Date(lastNotif.sent_at).toLocaleDateString("pt-BR")}</span>
+                      </div>
+                    )}
+                    <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Profile list - Table */}
+        {viewMode === "table" && (
+          <div className="stat-card overflow-hidden p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Prioridade</TableHead>
+                  <TableHead>Perfil</TableHead>
+                  <TableHead>Matches</TableHead>
+                  <TableHead>Último Aviso</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProfiles.map(profile => {
+                  const st = statusConfig[profile.status];
+                  const matchCount = matchCountByProfile[profile.id] || 0;
+                  const lastNotif = mockWaitlistNotifications.filter(n => n.waitlist_id === profile.id).sort((a, b) => b.sent_at.localeCompare(a.sent_at))[0];
+                  return (
+                    <TableRow key={profile.id} className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedProfile(profile)}>
+                      <TableCell className="font-medium">{profile.contact.full_name}</TableCell>
+                      <TableCell className="text-xs">{profile.contact.phone_e164}</TableCell>
+                      <TableCell className="text-xs">{profile.contact.email || "—"}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${st.color}`}>
+                          <st.icon className="w-3 h-3" /> {st.label}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">{profile.priority_score || "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{getProfileSummary(profile.id)}</TableCell>
+                      <TableCell className="text-center">{matchCount > 0 ? matchCount : "—"}</TableCell>
+                      <TableCell className="text-xs">{lastNotif ? new Date(lastNotif.sent_at).toLocaleDateString("pt-BR") : "—"}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
         {/* Add Profile Dialog */}
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
