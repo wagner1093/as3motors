@@ -8,6 +8,7 @@ const navItems = [
   { to: "/pipeline", icon: Kanban, label: "Pipeline" },
   { to: "/estoque", icon: Car, label: "Estoque" },
   { to: "/followup", icon: RotateCcw, label: "Follow-up" },
+  { to: "/lista-inteligente", icon: Users, label: "Lista Inteligente" },
 ];
 
 const AppSidebar = () => {

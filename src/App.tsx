@@ -29,6 +29,7 @@ const App = () => (
             <Route path="/pipeline" element={<PipelinePage />} />
             <Route path="/estoque" element={<InventoryPage />} />
             <Route path="/followup" element={<FollowupPage />} />
+            <Route path="/lista-inteligente" element={<WaitlistPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
