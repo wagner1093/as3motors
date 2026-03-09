@@ -23,10 +23,10 @@ const FollowupPage = () => {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="page-header">
-        <h1>Follow-up</h1>
-        <p>Gerencie sequências automáticas de mensagens</p>
+    <div className="max-w-5xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Follow-up</h1>
+        <p className="text-sm text-muted-foreground mt-1">Gerencie sequências automáticas de mensagens</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
