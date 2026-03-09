@@ -230,10 +230,18 @@ const WaitlistPage = () => {
             <h1>Lista Inteligente</h1>
             <p>Clientes aguardando veículos compatíveis com seu perfil</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button onClick={() => setAddDialogOpen(true)} className="rounded-xl gap-2">
               <UserPlus className="w-4 h-4" /> Novo Cadastro
             </Button>
+            <Button variant="outline" onClick={exportCSV} className="rounded-xl gap-2">
+              <Download className="w-4 h-4" /> Exportar CSV
+            </Button>
+            <Button variant="outline" size="icon" className="rounded-xl"
+              onClick={() => setViewMode(v => v === "cards" ? "table" : "cards")}>
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)}
