@@ -11,6 +11,7 @@ const navItems = [
   { to: "/followup", icon: RotateCcw, label: "Follow-up" },
   { to: "/lista-inteligente", icon: Users, label: "Lista Inteligente" },
   { to: "/repasse", icon: Repeat, label: "Grupos de Repasse" },
+  { to: "/ads", icon: Megaphone, label: "Ads" },
 ];
 
 const AppSidebar = () => {
