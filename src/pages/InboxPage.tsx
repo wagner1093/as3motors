@@ -186,7 +186,7 @@ const InboxPage = () => {
 
       {/* AI Panel */}
       {selected && (
-        <div className="w-[320px] border-l bg-card p-5 overflow-y-auto space-y-5">
+        <div className="w-[320px] border-l glass-panel p-5 overflow-y-auto space-y-5">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Bot className="w-4 h-4 text-accent" />
