@@ -129,7 +129,7 @@ const InboxPage = () => {
       <div className="flex-1 flex flex-col">
         {selected ? (
           <>
-            <div className="p-4 border-b bg-card flex items-center justify-between">
+            <div className="p-4 border-b glass-panel flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold">
                   {selected.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
