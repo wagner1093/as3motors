@@ -36,10 +36,10 @@
 
     --radius: 0.75rem;
 
-    --sidebar-bg: 0 0% 5%;
-    --sidebar-fg: 0 0% 60%;
-    --sidebar-active: 0 0% 100%;
-    --sidebar-hover: 0 0% 12%;
+    --sidebar-bg: 0 0% 100%;
+    --sidebar-fg: 220 8% 46%;
+    --sidebar-active: 0 0% 9%;
+    --sidebar-hover: 220 14% 96%;
     --sidebar-accent: 42 100% 50%;
     --sidebar-width: 240px;
 
