@@ -206,6 +206,9 @@ const WaitlistPage = () => {
             <p>Clientes aguardando veículos compatíveis com seu perfil</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button onClick={() => setAddDialogOpen(true)} className="rounded-xl gap-2">
+              <UserPlus className="w-4 h-4" /> Novo Cadastro
+            </Button>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)}
