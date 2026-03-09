@@ -233,10 +233,10 @@ const WaitlistPage = () => {
         {/* Summary stats */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Ativos", value: mockWaitlistProfiles.filter(p => p.status === "active").length, icon: CheckCircle2, accent: "text-emerald-600" },
+            { label: "Ativos", value: profiles.filter(p => p.status === "active").length, icon: CheckCircle2, accent: "text-emerald-600" },
             { label: "Com Matches", value: Object.keys(matchCountByProfile).length, icon: Sparkles, accent: "text-blue-600" },
-            { label: "Pausados", value: mockWaitlistProfiles.filter(p => p.status === "paused").length, icon: Pause, accent: "text-amber-600" },
-            { label: "Convertidos", value: mockWaitlistProfiles.filter(p => p.status === "converted").length, icon: Star, accent: "text-violet-600" },
+            { label: "Pausados", value: profiles.filter(p => p.status === "paused").length, icon: Pause, accent: "text-amber-600" },
+            { label: "Convertidos", value: profiles.filter(p => p.status === "converted").length, icon: Star, accent: "text-violet-600" },
           ].map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }} className="stat-card flex items-center gap-4">
