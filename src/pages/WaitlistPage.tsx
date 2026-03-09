@@ -10,8 +10,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, MessageSquare, Eye, X, Send, Clock, Star,
   CheckCircle2, XCircle, Pause, ChevronRight, Car, Phone, Mail,
-  Baby, Briefcase, Sparkles, AlertCircle
+  Baby, Briefcase, Sparkles, AlertCircle, Plus, UserPlus
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Contact, WaitlistProfile, WaitlistPreferences, WaitlistMatch } from "@/types/crm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
