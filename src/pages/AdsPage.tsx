@@ -39,94 +39,66 @@ interface AdCampaign {
   daily_data: { date: string; spent: number; leads: number; impressions: number; clicks: number }[];
 }
 
+// Helper to generate 30 days of daily data
+const genDaily = (baseSpent: number, baseLeads: number, baseImpressions: number, daysBack = 30, pausedAfter?: number) => {
+  const data = [];
+  for (let i = daysBack; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    const paused = pausedAfter !== undefined && i < pausedAfter;
+    const variance = () => 0.7 + Math.random() * 0.6;
+    const spent = paused ? 0 : Math.round(baseSpent * variance());
+    const leads = paused ? 0 : Math.max(0, Math.round(baseLeads * variance()));
+    const impressions = paused ? 0 : Math.round(baseImpressions * variance());
+    const clicks = paused ? 0 : Math.round(impressions * (0.025 + Math.random() * 0.015));
+    data.push({ date: dateStr, spent, leads, impressions, clicks });
+  }
+  return data;
+};
+
 const mockCampaigns: AdCampaign[] = [
   {
     id: "camp1", name: "Corolla XEi 2023 - Março", vehicleId: "v1", status: "active", platform: "meta",
-    objective: "Geração de Leads", budget_daily: 80, spent_total: 1840, impressions: 45200, clicks: 1356,
-    leads: 34, cpl: 54.12, cpc: 1.36, ctr: 3.0, reach: 32100, frequency: 1.41,
-    start_date: "2025-02-15", end_date: null,
-    daily_data: [
-      { date: "2025-03-03", spent: 78, leads: 2, impressions: 2100, clicks: 63 },
-      { date: "2025-03-04", spent: 82, leads: 3, impressions: 2400, clicks: 72 },
-      { date: "2025-03-05", spent: 75, leads: 1, impressions: 1900, clicks: 57 },
-      { date: "2025-03-06", spent: 80, leads: 4, impressions: 2600, clicks: 78 },
-      { date: "2025-03-07", spent: 85, leads: 2, impressions: 2200, clicks: 66 },
-      { date: "2025-03-08", spent: 79, leads: 3, impressions: 2500, clicks: 75 },
-      { date: "2025-03-09", spent: 65, leads: 2, impressions: 1800, clicks: 54 },
-    ],
+    objective: "Geração de Leads", budget_daily: 80, spent_total: 2480, impressions: 62400, clicks: 1872,
+    leads: 48, cpl: 51.67, cpc: 1.32, ctr: 3.0, reach: 44800, frequency: 1.39,
+    start_date: "2025-02-07", end_date: null,
+    daily_data: genDaily(80, 2, 2300),
   },
   {
     id: "camp2", name: "Civic Touring 2024 - Premium", vehicleId: "v2", status: "active", platform: "meta",
-    objective: "Geração de Leads", budget_daily: 120, spent_total: 3240, impressions: 68400, clicks: 2052,
-    leads: 52, cpl: 62.31, cpc: 1.58, ctr: 3.0, reach: 48900, frequency: 1.40,
-    start_date: "2025-02-10", end_date: null,
-    daily_data: [
-      { date: "2025-03-03", spent: 115, leads: 3, impressions: 3200, clicks: 96 },
-      { date: "2025-03-04", spent: 122, leads: 4, impressions: 3600, clicks: 108 },
-      { date: "2025-03-05", spent: 118, leads: 2, impressions: 2800, clicks: 84 },
-      { date: "2025-03-06", spent: 120, leads: 5, impressions: 3900, clicks: 117 },
-      { date: "2025-03-07", spent: 125, leads: 3, impressions: 3100, clicks: 93 },
-      { date: "2025-03-08", spent: 119, leads: 4, impressions: 3500, clicks: 105 },
-      { date: "2025-03-09", spent: 98, leads: 3, impressions: 2700, clicks: 81 },
-    ],
+    objective: "Geração de Leads", budget_daily: 120, spent_total: 4560, impressions: 98400, clicks: 2952,
+    leads: 72, cpl: 63.33, cpc: 1.54, ctr: 3.0, reach: 68200, frequency: 1.44,
+    start_date: "2025-02-01", end_date: null,
+    daily_data: genDaily(120, 3, 3400),
   },
   {
     id: "camp3", name: "T-Cross Highline - SUV", vehicleId: "v3", status: "paused", platform: "meta",
-    objective: "Geração de Leads", budget_daily: 60, spent_total: 1020, impressions: 28600, clicks: 858,
-    leads: 18, cpl: 56.67, cpc: 1.19, ctr: 3.0, reach: 21400, frequency: 1.34,
-    start_date: "2025-02-20", end_date: null,
-    daily_data: [
-      { date: "2025-03-03", spent: 58, leads: 1, impressions: 1400, clicks: 42 },
-      { date: "2025-03-04", spent: 62, leads: 2, impressions: 1800, clicks: 54 },
-      { date: "2025-03-05", spent: 55, leads: 1, impressions: 1200, clicks: 36 },
-      { date: "2025-03-06", spent: 60, leads: 2, impressions: 1600, clicks: 48 },
-      { date: "2025-03-07", spent: 0, leads: 0, impressions: 0, clicks: 0 },
-      { date: "2025-03-08", spent: 0, leads: 0, impressions: 0, clicks: 0 },
-      { date: "2025-03-09", spent: 0, leads: 0, impressions: 0, clicks: 0 },
-    ],
+    objective: "Geração de Leads", budget_daily: 60, spent_total: 1320, impressions: 34800, clicks: 1044,
+    leads: 22, cpl: 60.00, cpc: 1.26, ctr: 3.0, reach: 25600, frequency: 1.36,
+    start_date: "2025-02-10", end_date: null,
+    daily_data: genDaily(60, 1, 1500, 30, 5),
   },
   {
     id: "camp4", name: "Tracker Premier - Oportunidade", vehicleId: "v4", status: "active", platform: "instagram",
-    objective: "Geração de Leads", budget_daily: 50, spent_total: 750, impressions: 19800, clicks: 594,
-    leads: 15, cpl: 50.00, cpc: 1.26, ctr: 3.0, reach: 15200, frequency: 1.30,
-    start_date: "2025-02-25", end_date: null,
-    daily_data: [
-      { date: "2025-03-03", spent: 48, leads: 1, impressions: 1100, clicks: 33 },
-      { date: "2025-03-04", spent: 52, leads: 2, impressions: 1400, clicks: 42 },
-      { date: "2025-03-05", spent: 50, leads: 1, impressions: 1200, clicks: 36 },
-      { date: "2025-03-06", spent: 50, leads: 3, impressions: 1500, clicks: 45 },
-      { date: "2025-03-07", spent: 51, leads: 1, impressions: 1000, clicks: 30 },
-      { date: "2025-03-08", spent: 49, leads: 2, impressions: 1300, clicks: 39 },
-      { date: "2025-03-09", spent: 42, leads: 1, impressions: 900, clicks: 27 },
-    ],
+    objective: "Geração de Leads", budget_daily: 50, spent_total: 1250, impressions: 28800, clicks: 864,
+    leads: 21, cpl: 59.52, cpc: 1.45, ctr: 3.0, reach: 21400, frequency: 1.35,
+    start_date: "2025-02-15", end_date: null,
+    daily_data: genDaily(50, 1, 1200),
   },
   {
     id: "camp5", name: "Pulse Impetus 2024 - Lançamento", vehicleId: "v6", status: "active", platform: "meta",
-    objective: "Geração de Leads", budget_daily: 100, spent_total: 1400, impressions: 38500, clicks: 1155,
-    leads: 28, cpl: 50.00, cpc: 1.21, ctr: 3.0, reach: 29200, frequency: 1.32,
-    start_date: "2025-02-28", end_date: null,
-    daily_data: [
-      { date: "2025-03-03", spent: 95, leads: 2, impressions: 2000, clicks: 60 },
-      { date: "2025-03-04", spent: 102, leads: 3, impressions: 2500, clicks: 75 },
-      { date: "2025-03-05", spent: 98, leads: 2, impressions: 2100, clicks: 63 },
-      { date: "2025-03-06", spent: 100, leads: 4, impressions: 2800, clicks: 84 },
-      { date: "2025-03-07", spent: 105, leads: 3, impressions: 2300, clicks: 69 },
-      { date: "2025-03-08", spent: 99, leads: 3, impressions: 2600, clicks: 78 },
-      { date: "2025-03-09", spent: 88, leads: 2, impressions: 1900, clicks: 57 },
-    ],
+    objective: "Geração de Leads", budget_daily: 100, spent_total: 2800, impressions: 56000, clicks: 1680,
+    leads: 38, cpl: 73.68, cpc: 1.67, ctr: 3.0, reach: 42000, frequency: 1.33,
+    start_date: "2025-02-20", end_date: null,
+    daily_data: genDaily(100, 2, 2200),
   },
   {
     id: "camp6", name: "HB20 Diamond - Encerrada", vehicleId: "v5", status: "completed", platform: "meta",
     objective: "Geração de Leads", budget_daily: 70, spent_total: 2100, impressions: 52000, clicks: 1560,
     leads: 41, cpl: 51.22, cpc: 1.35, ctr: 3.0, reach: 38000, frequency: 1.37,
     start_date: "2025-01-15", end_date: "2025-03-01",
-    daily_data: [
-      { date: "2025-02-24", spent: 68, leads: 2, impressions: 2100, clicks: 63 },
-      { date: "2025-02-25", spent: 72, leads: 3, impressions: 2400, clicks: 72 },
-      { date: "2025-02-26", spent: 70, leads: 2, impressions: 2200, clicks: 66 },
-      { date: "2025-02-27", spent: 71, leads: 1, impressions: 1900, clicks: 57 },
-      { date: "2025-02-28", spent: 69, leads: 2, impressions: 2000, clicks: 60 },
-    ],
+    daily_data: genDaily(70, 2, 1900, 45),
   },
 ];
 
@@ -135,7 +107,7 @@ type DateFilter = "today" | "yesterday" | "7days" | "30days" | "60days" | "all" 
 const AdsPage = () => {
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<AdCampaign[]>(mockCampaigns);
-  const [dateFilter, setDateFilter] = useState<DateFilter>("7days");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("30days");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [showCustomPicker, setShowCustomPicker] = useState(false);
