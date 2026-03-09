@@ -107,7 +107,7 @@ type DateFilter = "today" | "yesterday" | "7days" | "30days" | "60days" | "all" 
 const AdsPage = () => {
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<AdCampaign[]>(mockCampaigns);
-  const [dateFilter, setDateFilter] = useState<DateFilter>("7days");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("30days");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [showCustomPicker, setShowCustomPicker] = useState(false);
