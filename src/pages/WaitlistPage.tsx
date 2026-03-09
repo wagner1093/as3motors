@@ -304,6 +304,116 @@ const WaitlistPage = () => {
             );
           })}
         </div>
+
+        {/* Add Profile Dialog */}
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogContent className="rounded-2xl max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5" /> Novo Cadastro na Lista Inteligente
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Contact info */}
+              <div className="col-span-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Dados do Contato</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nome completo *</Label>
+                <Input placeholder="Ex: Carlos Silva" value={form.full_name} onChange={e => updateForm("full_name", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Telefone (E.164) *</Label>
+                <Input placeholder="+5511999001122" value={form.phone} onChange={e => updateForm("phone", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Email</Label>
+                <Input placeholder="email@exemplo.com" value={form.email} onChange={e => updateForm("email", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Prioridade (0-100)</Label>
+                <Input type="number" placeholder="50" value={form.priority_score} onChange={e => updateForm("priority_score", e.target.value)} className="rounded-xl" />
+              </div>
+
+              {/* Preferences */}
+              <div className="col-span-2 mt-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Preferências do Veículo</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Carroceria</Label>
+                <Select value={form.body_type} onValueChange={v => updateForm("body_type", v)}>
+                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["sedan", "suv", "hatch", "pickup", "wagon", "indefinido"].map(t => (
+                      <SelectItem key={t} value={t}>{t.toUpperCase()}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Pagamento</Label>
+                <Select value={form.payment_preference} onValueChange={v => updateForm("payment_preference", v)}>
+                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["a_vista", "financiamento", "troca", "misto", "indefinido"].map(t => (
+                      <SelectItem key={t} value={t}>{t.replace(/_/g, " ").toUpperCase()}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Marcas preferidas</Label>
+                <Input placeholder="toyota, honda" value={form.preferred_makes} onChange={e => updateForm("preferred_makes", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Modelos preferidos</Label>
+                <Input placeholder="corolla, civic" value={form.preferred_models} onChange={e => updateForm("preferred_models", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Ano mínimo</Label>
+                <Input type="number" placeholder="2020" value={form.min_year} onChange={e => updateForm("min_year", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Ano máximo</Label>
+                <Input type="number" placeholder="2025" value={form.max_year} onChange={e => updateForm("max_year", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Preço mínimo (R$)</Label>
+                <Input type="number" placeholder="50000" value={form.min_price} onChange={e => updateForm("min_price", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Preço máximo (R$)</Label>
+                <Input type="number" placeholder="150000" value={form.max_price} onChange={e => updateForm("max_price", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Requisitos (must have)</Label>
+                <Input placeholder="porta malas grande, familia" value={form.must_have} onChange={e => updateForm("must_have", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Evitar</Label>
+                <Input placeholder="motor turbo, câmbio manual" value={form.avoid} onChange={e => updateForm("avoid", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={form.has_kids} onCheckedChange={v => updateForm("has_kids", v)} />
+                <Label className="text-xs">Tem filhos</Label>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Prioridade porta-malas (0-10)</Label>
+                <Input type="number" placeholder="7" value={form.trunk_priority} onChange={e => updateForm("trunk_priority", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs">Observações</Label>
+                <Textarea placeholder="Ex: Tem 2 filhos, viaja muito, quer carro econômico..." value={form.notes} onChange={e => updateForm("notes", e.target.value)} className="rounded-xl" rows={3} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setForm({ ...emptyForm }); setAddDialogOpen(false); }} className="rounded-xl">Cancelar</Button>
+              <Button onClick={handleAddProfile} className="rounded-xl gap-2">
+                <Plus className="w-4 h-4" /> Cadastrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
