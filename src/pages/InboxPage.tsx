@@ -209,7 +209,7 @@ const InboxPage = () => {
                 <Car className="w-4 h-4 text-muted-foreground" />
                 <h3 className="text-sm font-semibold">Carro de Interesse</h3>
               </div>
-              <div className="bg-secondary rounded-xl p-4 text-sm space-y-1.5 cursor-pointer hover:bg-muted transition-colors"
+              <div className="glass-card rounded-xl p-4 text-sm space-y-1.5 cursor-pointer hover:bg-muted/30 transition-colors"
                 onClick={() => navigate("/estoque")}>
                 <p className="font-semibold">{vehicle.make} {vehicle.model} {vehicle.year}</p>
                 <p className="text-muted-foreground">{vehicle.version} · {vehicle.color}</p>
