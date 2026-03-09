@@ -193,23 +193,23 @@ const InventoryPage = () => {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="page-header flex items-center justify-between">
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1>Estoque</h1>
-          <p>Gerencie seus veículos disponíveis</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Estoque</h1>
+          <p className="text-sm text-muted-foreground mt-1">Gerencie seus veículos disponíveis</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => { setForm({ ...emptyVehicle }); setAddDialogOpen(true); }} className="rounded-xl gap-2">
+          <Button onClick={() => { setForm({ ...emptyVehicle }); setAddDialogOpen(true); }} className="rounded-xl gap-2 shadow-md">
             <Plus className="w-4 h-4" /> Novo Veículo
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar veículo..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 w-64 rounded-xl bg-card border h-10" />
+          <Input placeholder="Buscar veículo..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 w-64 rounded-xl glass-input border-0 h-10" />
         </div>
         <div className="flex gap-1.5">
           {[
