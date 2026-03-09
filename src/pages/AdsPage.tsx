@@ -279,7 +279,6 @@ const AdsPage = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
         {[
           { label: "Investido", value: `R$ ${totals.spent.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-accent" },
