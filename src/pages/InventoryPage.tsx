@@ -260,12 +260,13 @@ const InventoryPage = () => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.35 }}
-              className="stat-card group"
+              className="glass-card group overflow-hidden"
             >
-              <div className="h-44 bg-secondary rounded-xl flex items-center justify-center mb-4 overflow-hidden cursor-pointer"
+              <div className="h-44 bg-muted/40 rounded-xl flex items-center justify-center mb-4 overflow-hidden cursor-pointer mx-4 mt-4"
                 onClick={() => setExpandedVehicle(isExpanded ? null : vehicle.id)}>
                 <Car className="w-16 h-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-500" />
               </div>
+              <div className="px-5 pb-5">
 
               <div className="flex items-start justify-between mb-1">
                 <div>
