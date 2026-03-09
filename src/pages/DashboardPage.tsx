@@ -1,13 +1,15 @@
+import { useNavigate } from "react-router-dom";
 import { mockConversations, mockDeals, mockVehicles, mockEnrollments } from "@/data/mockData";
 import { MessageSquare, Flame, TrendingUp, Car, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 
-const StatCard = ({ icon: Icon, label, value, sub, color, delay }: { icon: any; label: string; value: string | number; sub?: string; color?: string; delay?: number }) => (
+const StatCard = ({ icon: Icon, label, value, sub, color, delay, onClick }: { icon: any; label: string; value: string | number; sub?: string; color?: string; delay?: number; onClick?: () => void }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: delay || 0, duration: 0.4 }}
-    className="stat-card flex items-start gap-4"
+    className={`stat-card flex items-start gap-4 ${onClick ? "cursor-pointer" : ""}`}
+    onClick={onClick}
   >
     <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color || "bg-primary/5"}`}>
       <Icon className="w-5 h-5" />
@@ -21,6 +23,7 @@ const StatCard = ({ icon: Icon, label, value, sub, color, delay }: { icon: any; 
 );
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const newLeads = mockConversations.filter(c => c.status === "new").length;
   const hotLeads = mockConversations.filter(c => c.ai_interest_label === "hot").length;
   const warmLeads = mockConversations.filter(c => c.ai_interest_label === "warm").length;
@@ -39,18 +42,22 @@ const DashboardPage = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-        <StatCard icon={MessageSquare} label="Novos Leads" value={newLeads} sub="Hoje" color="bg-info/10" delay={0} />
-        <StatCard icon={Flame} label="Leads Quentes" value={hotLeads} sub={`${warmLeads} mornos · ${coldLeads} frios`} color="bg-destructive/10" delay={0.05} />
-        <StatCard icon={TrendingUp} label="Negócios Abertos" value={openDeals} sub={`${wonDeals} ganhos`} color="bg-success/10" delay={0.1} />
-        <StatCard icon={Car} label="Veículos Disponíveis" value={availableCars} sub={`R$ ${(totalStock / 1000).toFixed(0)}k em estoque`} color="bg-accent/15" delay={0.15} />
+        <StatCard icon={MessageSquare} label="Novos Leads" value={newLeads} sub="Hoje" color="bg-info/10" delay={0} onClick={() => navigate("/inbox")} />
+        <StatCard icon={Flame} label="Leads Quentes" value={hotLeads} sub={`${warmLeads} mornos · ${coldLeads} frios`} color="bg-destructive/10" delay={0.05} onClick={() => navigate("/inbox")} />
+        <StatCard icon={TrendingUp} label="Negócios Abertos" value={openDeals} sub={`${wonDeals} ganhos`} color="bg-success/10" delay={0.1} onClick={() => navigate("/pipeline")} />
+        <StatCard icon={Car} label="Veículos Disponíveis" value={availableCars} sub={`R$ ${(totalStock / 1000).toFixed(0)}k em estoque`} color="bg-accent/15" delay={0.15} onClick={() => navigate("/estoque")} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="stat-card">
-          <h2 className="font-semibold text-lg mb-5">Conversas Recentes</h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-semibold text-lg">Conversas Recentes</h2>
+            <button onClick={() => navigate("/inbox")} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Ver todas →</button>
+          </div>
           <div className="space-y-1">
             {mockConversations.slice(0, 5).map(conv => (
-              <div key={conv.id} className="flex items-center justify-between py-3 px-2 rounded-xl hover:bg-secondary/50 transition-colors cursor-pointer">
+              <div key={conv.id} onClick={() => navigate(`/inbox?conv=${conv.id}`)}
+                className="flex items-center justify-between py-3 px-2 rounded-xl hover:bg-secondary/50 transition-colors cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold">
                     {conv.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
@@ -68,8 +75,12 @@ const DashboardPage = () => {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="stat-card">
-          <h2 className="font-semibold text-lg mb-5">Pipeline</h2>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+          className="stat-card cursor-pointer" onClick={() => navigate("/pipeline")}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-semibold text-lg">Pipeline</h2>
+            <span className="text-xs text-muted-foreground hover:text-foreground transition-colors">Ver pipeline →</span>
+          </div>
           <div className="space-y-4">
             {[
               { stage: "Novos", count: mockDeals.filter(d => d.stage === "new").length },
@@ -95,9 +106,9 @@ const DashboardPage = () => {
             ))}
           </div>
 
-          <div className="mt-6 pt-4 border-t flex items-center gap-3">
+          <div className="mt-6 pt-4 border-t flex items-center gap-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate("/followup"); }}>
             <RotateCcw className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{activeFollowups} follow-ups ativos</span>
+            <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">{activeFollowups} follow-ups ativos →</span>
           </div>
         </motion.div>
       </div>

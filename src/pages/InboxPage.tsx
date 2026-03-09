@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { mockConversations, mockMessages, mockDeals, mockVehicles } from "@/data/mockData";
 import { Search, Send, Flame, Snowflake, Sun, Bot, Car, CreditCard, ArrowRightLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -7,12 +8,28 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const InboxPage = () => {
-  const [selectedId, setSelectedId] = useState<string>(mockConversations[0]?.id || "");
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const initialConv = searchParams.get("conv") || mockConversations[0]?.id || "";
+  const [selectedId, setSelectedId] = useState<string>(initialConv);
   const [search, setSearch] = useState("");
   const [filterInterest, setFilterInterest] = useState<string>("all");
   const [newMessage, setNewMessage] = useState("");
+  const [localMessages, setLocalMessages] = useState<Record<string, typeof mockMessages["conv1"]>>({ ...mockMessages });
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const conv = searchParams.get("conv");
+    if (conv) setSelectedId(conv);
+  }, [searchParams]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selectedId, localMessages]);
 
   const filtered = mockConversations.filter(c => {
     const matchSearch = c.contact.full_name.toLowerCase().includes(search.toLowerCase()) || c.contact.phone_e164.includes(search);
@@ -21,7 +38,7 @@ const InboxPage = () => {
   });
 
   const selected = mockConversations.find(c => c.id === selectedId);
-  const messages = mockMessages[selectedId] || [];
+  const messages = localMessages[selectedId] || [];
   const deal = mockDeals.find(d => d.conversation_id === selectedId);
   const vehicle = deal?.vehicle_interest_id ? mockVehicles.find(v => v.id === deal.vehicle_interest_id) : null;
 
@@ -29,6 +46,30 @@ const InboxPage = () => {
     if (label === "hot") return <Flame className="w-3.5 h-3.5" />;
     if (label === "warm") return <Sun className="w-3.5 h-3.5" />;
     return <Snowflake className="w-3.5 h-3.5" />;
+  };
+
+  const handleSend = () => {
+    if (!newMessage.trim() || !selectedId) return;
+    const msg = {
+      id: `m-${Date.now()}`,
+      conversation_id: selectedId,
+      direction: "outbound" as const,
+      text: newMessage.trim(),
+      sent_at: new Date().toISOString(),
+    };
+    setLocalMessages(prev => ({
+      ...prev,
+      [selectedId]: [...(prev[selectedId] || []), msg],
+    }));
+    setNewMessage("");
+    toast({ title: "Mensagem enviada" });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   return (
@@ -125,11 +166,17 @@ const InboxPage = () => {
                   </motion.div>
                 ))}
               </AnimatePresence>
+              <div ref={chatEndRef} />
             </div>
 
             <div className="p-4 border-t bg-card flex gap-3">
-              <Input placeholder="Digite uma mensagem..." value={newMessage} onChange={e => setNewMessage(e.target.value)} className="flex-1 rounded-xl bg-secondary border-0 h-11" />
-              <Button size="icon" className="rounded-xl h-11 w-11"><Send className="w-4 h-4" /></Button>
+              <Input placeholder="Digite uma mensagem..." value={newMessage}
+                onChange={e => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="flex-1 rounded-xl bg-secondary border-0 h-11" />
+              <Button size="icon" className="rounded-xl h-11 w-11" onClick={handleSend}>
+                <Send className="w-4 h-4" />
+              </Button>
             </div>
           </>
         ) : (
@@ -162,7 +209,8 @@ const InboxPage = () => {
                 <Car className="w-4 h-4 text-muted-foreground" />
                 <h3 className="text-sm font-semibold">Carro de Interesse</h3>
               </div>
-              <div className="bg-secondary rounded-xl p-4 text-sm space-y-1.5">
+              <div className="bg-secondary rounded-xl p-4 text-sm space-y-1.5 cursor-pointer hover:bg-muted transition-colors"
+                onClick={() => navigate("/estoque")}>
                 <p className="font-semibold">{vehicle.make} {vehicle.model} {vehicle.year}</p>
                 <p className="text-muted-foreground">{vehicle.version} · {vehicle.color}</p>
                 <p className="text-lg font-bold">R$ {vehicle.price.toLocaleString("pt-BR")}</p>
@@ -179,7 +227,9 @@ const InboxPage = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Etapa</span>
-                  <Badge variant="outline" className="rounded-full">{deal.stage}</Badge>
+                  <Badge variant="outline" className="rounded-full cursor-pointer" onClick={() => navigate("/pipeline")}>
+                    {deal.stage}
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Pagamento</span>
@@ -206,11 +256,27 @@ const InboxPage = () => {
           )}
 
           <div className="space-y-2 pt-2">
-            <Button variant="outline" size="sm" className="w-full text-xs rounded-xl h-9">Criar/Editar Negócio</Button>
-            <Button variant="outline" size="sm" className="w-full text-xs rounded-xl h-9">Iniciar Follow-up</Button>
+            <Button variant="outline" size="sm" className="w-full text-xs rounded-xl h-9"
+              onClick={() => navigate("/pipeline")}>
+              {deal ? "Ver no Pipeline" : "Criar Negócio"}
+            </Button>
+            <Button variant="outline" size="sm" className="w-full text-xs rounded-xl h-9"
+              onClick={() => { navigate("/followup"); toast({ title: "Follow-up", description: `Iniciando follow-up para ${selected.contact.full_name}` }); }}>
+              Iniciar Follow-up
+            </Button>
+            <Button variant="outline" size="sm" className="w-full text-xs rounded-xl h-9"
+              onClick={() => navigate("/lista-inteligente")}>
+              Criar Perfil de Espera
+            </Button>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 text-xs rounded-xl h-9 text-success hover:bg-success/10">✅ Ganho</Button>
-              <Button variant="outline" size="sm" className="flex-1 text-xs rounded-xl h-9 text-destructive hover:bg-destructive/10">❌ Perdido</Button>
+              <Button variant="outline" size="sm" className="flex-1 text-xs rounded-xl h-9 text-success hover:bg-success/10"
+                onClick={() => toast({ title: "✅ Negócio marcado como Ganho", description: selected.contact.full_name })}>
+                ✅ Ganho
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 text-xs rounded-xl h-9 text-destructive hover:bg-destructive/10"
+                onClick={() => toast({ title: "❌ Negócio marcado como Perdido", description: selected.contact.full_name, variant: "destructive" })}>
+                ❌ Perdido
+              </Button>
             </div>
           </div>
         </div>

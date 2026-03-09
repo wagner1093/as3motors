@@ -1,15 +1,29 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Car } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast({ title: "Preencha todos os campos", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Login realizado com sucesso!" });
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-sm space-y-6">
+      <form onSubmit={handleLogin} className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
             <Car className="w-8 h-8 text-accent-foreground" />
@@ -27,9 +41,9 @@ const LoginPage = () => {
             <label className="text-sm font-medium mb-1.5 block">Senha</label>
             <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
-          <Button className="w-full">Entrar</Button>
+          <Button type="submit" className="w-full">Entrar</Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

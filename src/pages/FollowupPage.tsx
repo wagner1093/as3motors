@@ -1,10 +1,27 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { mockSequences, mockSteps, mockEnrollments, mockConversations } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Clock, MessageSquare, Users } from "lucide-react";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const FollowupPage = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [toggledSequences, setToggledSequences] = useState<Record<string, boolean>>(
+    Object.fromEntries(mockSequences.map(s => [s.id, s.active]))
+  );
+
+  const handleToggle = (seqId: string, name: string) => {
+    setToggledSequences(prev => {
+      const newState = !prev[seqId];
+      toast({ title: newState ? "Sequência ativada" : "Sequência pausada", description: name });
+      return { ...prev, [seqId]: newState };
+    });
+  };
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="page-header">
@@ -32,7 +49,7 @@ const FollowupPage = () => {
                       <h3 className="font-semibold text-sm">{seq.name}</h3>
                       <p className="text-xs text-muted-foreground capitalize mt-0.5">{seq.trigger_type.replace("_", " ")}</p>
                     </div>
-                    <Switch checked={seq.active} />
+                    <Switch checked={toggledSequences[seq.id]} onCheckedChange={() => handleToggle(seq.id, seq.name)} />
                   </div>
                   <div className="space-y-2.5">
                     {steps.map((step, j) => (
@@ -70,7 +87,8 @@ const FollowupPage = () => {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="stat-card"
+                  className="stat-card cursor-pointer hover:border-primary/20 transition-colors"
+                  onClick={() => navigate(`/inbox?conv=${conv.id}`)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
