@@ -304,7 +304,7 @@ const AdsPage = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Leads over time */}
-        <Card className="lg:col-span-2 border-border/50">
+        <Card className="lg:col-span-2 glass-card border-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">Leads & Investimento por Dia</CardTitle>
           </CardHeader>
