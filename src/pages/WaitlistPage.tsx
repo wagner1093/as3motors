@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockWaitlistProfiles, mockWaitlistPreferences, mockWaitlistMatches, mockWaitlistNotifications, defaultMessageTemplate } from "@/data/mockData";
-import { WaitlistProfile, WaitlistMatch } from "@/types/crm";
+import { mockWaitlistProfiles, mockWaitlistPreferences, mockWaitlistMatches, mockWaitlistNotifications, defaultMessageTemplate, mockContacts } from "@/data/mockData";
+import { Contact, WaitlistProfile, WaitlistPreferences, WaitlistMatch } from "@/types/crm";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ArrowLeft, MessageSquare, Eye, X, Send, Clock, Star,
   CheckCircle2, XCircle, Pause, ChevronRight, Car, Phone, Mail,
-  Baby, Briefcase, Sparkles, AlertCircle
+  Baby, Briefcase, Sparkles, AlertCircle, Plus, UserPlus
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -61,6 +64,17 @@ function ScoreBadge({ score }: { score: number }) {
   );
 }
 
+const emptyForm = {
+  full_name: "", phone: "", email: "",
+  body_type: "indefinido" as WaitlistPreferences["body_type"],
+  preferred_makes: "", preferred_models: "",
+  min_year: "", max_year: "", min_price: "", max_price: "",
+  must_have: "", avoid: "",
+  payment_preference: "indefinido" as WaitlistPreferences["payment_preference"],
+  has_kids: false, trunk_priority: "",
+  notes: "", priority_score: "",
+};
+
 const WaitlistPage = () => {
   const [selectedProfile, setSelectedProfile] = useState<WaitlistProfile | null>(null);
   const [search, setSearch] = useState("");
@@ -69,17 +83,70 @@ const WaitlistPage = () => {
   const [sendMatch, setSendMatch] = useState<WaitlistMatch | null>(null);
   const [messageText, setMessageText] = useState("");
   const [dismissedMatches, setDismissedMatches] = useState<Set<string>>(new Set());
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [form, setForm] = useState({ ...emptyForm });
+  const [profiles, setProfiles] = useState<WaitlistProfile[]>(mockWaitlistProfiles);
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const updateForm = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }));
+
+  const handleAddProfile = () => {
+    if (!form.full_name.trim() || !form.phone.trim()) {
+      toast({ title: "Preencha nome e telefone", variant: "destructive" });
+      return;
+    }
+    const id = `wl-${Date.now()}`;
+    const contactId = `c-${Date.now()}`;
+    const newContact: Contact = {
+      id: contactId,
+      full_name: form.full_name.trim(),
+      phone_e164: form.phone.trim(),
+      email: form.email.trim() || null,
+      created_at: new Date().toISOString(),
+    };
+    const newProfile: WaitlistProfile = {
+      id,
+      contact_id: contactId,
+      contact: newContact,
+      status: "active",
+      priority_score: form.priority_score ? parseInt(form.priority_score) : null,
+      notes: form.notes.trim() || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const newPrefs: WaitlistPreferences = {
+      waitlist_id: id,
+      body_type: form.body_type,
+      preferred_makes: form.preferred_makes ? form.preferred_makes.split(",").map(s => s.trim().toLowerCase()).filter(Boolean) : null,
+      preferred_models: form.preferred_models ? form.preferred_models.split(",").map(s => s.trim().toLowerCase()).filter(Boolean) : null,
+      min_year: form.min_year ? parseInt(form.min_year) : null,
+      max_year: form.max_year ? parseInt(form.max_year) : null,
+      min_price: form.min_price ? parseFloat(form.min_price) : null,
+      max_price: form.max_price ? parseFloat(form.max_price) : null,
+      must_have: form.must_have ? form.must_have.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "_")).filter(Boolean) : null,
+      avoid: form.avoid ? form.avoid.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "_")).filter(Boolean) : null,
+      payment_preference: form.payment_preference,
+      has_kids: form.has_kids,
+      trunk_priority: form.trunk_priority ? parseInt(form.trunk_priority) : null,
+      updated_at: new Date().toISOString(),
+    };
+    // Add to local state
+    setProfiles(prev => [newProfile, ...prev]);
+    mockWaitlistPreferences[id] = newPrefs;
+    setForm({ ...emptyForm });
+    setAddDialogOpen(false);
+    toast({ title: "✅ Contato cadastrado!", description: `${newContact.full_name} adicionado à Lista Inteligente.` });
+  };
+
   const filteredProfiles = useMemo(() => {
-    return mockWaitlistProfiles.filter(p => {
+    return profiles.filter(p => {
       const matchesSearch = p.contact.full_name.toLowerCase().includes(search.toLowerCase()) ||
         p.contact.phone_e164.includes(search);
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [search, statusFilter]);
+  }, [search, statusFilter, profiles]);
 
   const profileMatches = useMemo(() => {
     if (!selectedProfile) return [];
@@ -139,6 +206,9 @@ const WaitlistPage = () => {
             <p>Clientes aguardando veículos compatíveis com seu perfil</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button onClick={() => setAddDialogOpen(true)} className="rounded-xl gap-2">
+              <UserPlus className="w-4 h-4" /> Novo Cadastro
+            </Button>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)}
@@ -163,10 +233,10 @@ const WaitlistPage = () => {
         {/* Summary stats */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Ativos", value: mockWaitlistProfiles.filter(p => p.status === "active").length, icon: CheckCircle2, accent: "text-emerald-600" },
+            { label: "Ativos", value: profiles.filter(p => p.status === "active").length, icon: CheckCircle2, accent: "text-emerald-600" },
             { label: "Com Matches", value: Object.keys(matchCountByProfile).length, icon: Sparkles, accent: "text-blue-600" },
-            { label: "Pausados", value: mockWaitlistProfiles.filter(p => p.status === "paused").length, icon: Pause, accent: "text-amber-600" },
-            { label: "Convertidos", value: mockWaitlistProfiles.filter(p => p.status === "converted").length, icon: Star, accent: "text-violet-600" },
+            { label: "Pausados", value: profiles.filter(p => p.status === "paused").length, icon: Pause, accent: "text-amber-600" },
+            { label: "Convertidos", value: profiles.filter(p => p.status === "converted").length, icon: Star, accent: "text-violet-600" },
           ].map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }} className="stat-card flex items-center gap-4">
@@ -234,6 +304,116 @@ const WaitlistPage = () => {
             );
           })}
         </div>
+
+        {/* Add Profile Dialog */}
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogContent className="rounded-2xl max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5" /> Novo Cadastro na Lista Inteligente
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Contact info */}
+              <div className="col-span-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Dados do Contato</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nome completo *</Label>
+                <Input placeholder="Ex: Carlos Silva" value={form.full_name} onChange={e => updateForm("full_name", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Telefone (E.164) *</Label>
+                <Input placeholder="+5511999001122" value={form.phone} onChange={e => updateForm("phone", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Email</Label>
+                <Input placeholder="email@exemplo.com" value={form.email} onChange={e => updateForm("email", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Prioridade (0-100)</Label>
+                <Input type="number" placeholder="50" value={form.priority_score} onChange={e => updateForm("priority_score", e.target.value)} className="rounded-xl" />
+              </div>
+
+              {/* Preferences */}
+              <div className="col-span-2 mt-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Preferências do Veículo</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Carroceria</Label>
+                <Select value={form.body_type} onValueChange={v => updateForm("body_type", v)}>
+                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["sedan", "suv", "hatch", "pickup", "wagon", "indefinido"].map(t => (
+                      <SelectItem key={t} value={t}>{t.toUpperCase()}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Pagamento</Label>
+                <Select value={form.payment_preference} onValueChange={v => updateForm("payment_preference", v)}>
+                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["a_vista", "financiamento", "troca", "misto", "indefinido"].map(t => (
+                      <SelectItem key={t} value={t}>{t.replace(/_/g, " ").toUpperCase()}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Marcas preferidas</Label>
+                <Input placeholder="toyota, honda" value={form.preferred_makes} onChange={e => updateForm("preferred_makes", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Modelos preferidos</Label>
+                <Input placeholder="corolla, civic" value={form.preferred_models} onChange={e => updateForm("preferred_models", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Ano mínimo</Label>
+                <Input type="number" placeholder="2020" value={form.min_year} onChange={e => updateForm("min_year", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Ano máximo</Label>
+                <Input type="number" placeholder="2025" value={form.max_year} onChange={e => updateForm("max_year", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Preço mínimo (R$)</Label>
+                <Input type="number" placeholder="50000" value={form.min_price} onChange={e => updateForm("min_price", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Preço máximo (R$)</Label>
+                <Input type="number" placeholder="150000" value={form.max_price} onChange={e => updateForm("max_price", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Requisitos (must have)</Label>
+                <Input placeholder="porta malas grande, familia" value={form.must_have} onChange={e => updateForm("must_have", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Evitar</Label>
+                <Input placeholder="motor turbo, câmbio manual" value={form.avoid} onChange={e => updateForm("avoid", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={form.has_kids} onCheckedChange={v => updateForm("has_kids", v)} />
+                <Label className="text-xs">Tem filhos</Label>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Prioridade porta-malas (0-10)</Label>
+                <Input type="number" placeholder="7" value={form.trunk_priority} onChange={e => updateForm("trunk_priority", e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs">Observações</Label>
+                <Textarea placeholder="Ex: Tem 2 filhos, viaja muito, quer carro econômico..." value={form.notes} onChange={e => updateForm("notes", e.target.value)} className="rounded-xl" rows={3} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setForm({ ...emptyForm }); setAddDialogOpen(false); }} className="rounded-xl">Cancelar</Button>
+              <Button onClick={handleAddProfile} className="rounded-xl gap-2">
+                <Plus className="w-4 h-4" /> Cadastrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
