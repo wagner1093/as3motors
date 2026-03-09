@@ -344,7 +344,7 @@ const AdsPage = () => {
       </div>
 
       {/* Campaigns Table */}
-      <Card className="border-border/50">
+      <Card className="glass-card border-0 overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
