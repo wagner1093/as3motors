@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, LogOut, Search } from "lucide-react";
+import { motion } from "framer-motion";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -14,29 +15,50 @@ const AppSidebar = () => {
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 z-40 flex flex-col" style={{ width: "var(--sidebar-width)", background: "hsl(var(--sidebar-bg))" }}>
-      <div className="flex items-center gap-2 px-5 py-5">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--sidebar-accent))" }}>
-          <Car className="w-5 h-5" style={{ color: "hsl(var(--primary))" }} />
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-6 py-6">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--sidebar-accent))" }}>
+          <Car className="w-5 h-5" style={{ color: "hsl(var(--sidebar-bg))" }} />
         </div>
-        <span className="font-bold text-lg" style={{ color: "hsl(var(--sidebar-active))" }}>AutoCRM</span>
+        <span className="font-bold text-lg tracking-tight" style={{ color: "hsl(var(--sidebar-active))" }}>AutoCRM</span>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-1 px-3 mt-4">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/"}
-            className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}
-          >
-            <item.icon className="w-5 h-5" />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+      {/* Search */}
+      <div className="px-4 mb-4">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm" style={{ background: "hsl(var(--sidebar-hover))", color: "hsl(var(--sidebar-fg))" }}>
+          <Search className="w-4 h-4" />
+          <span className="text-xs">Buscar...</span>
+          <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded" style={{ background: "hsl(0 0% 20%)" }}>⌘K</span>
+        </div>
+      </div>
+
+      <nav className="flex-1 flex flex-col gap-1 px-3">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/"}
+              className={`sidebar-link ${isActive ? "active" : ""}`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="sidebar-active"
+                  className="absolute inset-0 rounded-xl"
+                  style={{ background: "hsl(var(--sidebar-hover))" }}
+                  transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                />
+              )}
+              <item.icon className="w-5 h-5 relative z-10" />
+              <span className="relative z-10">{item.label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
 
-      <div className="px-3 pb-5">
-        <button className="sidebar-link w-full">
+      <div className="px-3 pb-6">
+        <button className="sidebar-link w-full opacity-60 hover:opacity-100">
           <LogOut className="w-5 h-5" />
           <span>Sair</span>
         </button>
