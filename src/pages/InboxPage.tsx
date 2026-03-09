@@ -80,7 +80,7 @@ const InboxPage = () => {
           <h2 className="font-semibold text-lg">Inbox</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar contato..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-xl bg-secondary border-0" />
+            <Input placeholder="Buscar contato..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-xl glass-input border-0" />
           </div>
           <div className="flex gap-1.5">
             {[{ key: "all", label: "Todos" }, { key: "hot", label: "🔥 Quentes" }, { key: "warm", label: "🟡 Mornos" }, { key: "cold", label: "🔵 Frios" }].map(f => (
