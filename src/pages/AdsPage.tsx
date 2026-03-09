@@ -464,7 +464,7 @@ const AdsPage = () => {
           const periodSpent = dailyFiltered.reduce((s, d) => s + d.spent, 0);
 
           return (
-            <Card key={camp.id} className="border-border/50 overflow-hidden">
+            <Card key={camp.id} className="glass-card border-0 overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
