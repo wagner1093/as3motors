@@ -54,7 +54,7 @@ const FollowupPage = () => {
                   <div className="space-y-2.5">
                     {steps.map((step, j) => (
                       <div key={step.id} className="flex items-start gap-3 text-xs">
-                        <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center shrink-0 text-[11px] font-semibold">
+                        <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 text-[11px] font-semibold text-accent">
                           {j + 1}
                         </div>
                         <div>
