@@ -9,6 +9,7 @@ import InboxPage from "@/pages/InboxPage";
 import PipelinePage from "@/pages/PipelinePage";
 import InventoryPage from "@/pages/InventoryPage";
 import FollowupPage from "@/pages/FollowupPage";
+import WaitlistPage from "@/pages/WaitlistPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/NotFound";
 
