@@ -64,6 +64,17 @@ function ScoreBadge({ score }: { score: number }) {
   );
 }
 
+const emptyForm = {
+  full_name: "", phone: "", email: "",
+  body_type: "indefinido" as WaitlistPreferences["body_type"],
+  preferred_makes: "", preferred_models: "",
+  min_year: "", max_year: "", min_price: "", max_price: "",
+  must_have: "", avoid: "",
+  payment_preference: "indefinido" as WaitlistPreferences["payment_preference"],
+  has_kids: false, trunk_priority: "",
+  notes: "", priority_score: "",
+};
+
 const WaitlistPage = () => {
   const [selectedProfile, setSelectedProfile] = useState<WaitlistProfile | null>(null);
   const [search, setSearch] = useState("");
@@ -72,8 +83,61 @@ const WaitlistPage = () => {
   const [sendMatch, setSendMatch] = useState<WaitlistMatch | null>(null);
   const [messageText, setMessageText] = useState("");
   const [dismissedMatches, setDismissedMatches] = useState<Set<string>>(new Set());
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [form, setForm] = useState({ ...emptyForm });
+  const [profiles, setProfiles] = useState<WaitlistProfile[]>(mockWaitlistProfiles);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const updateForm = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }));
+
+  const handleAddProfile = () => {
+    if (!form.full_name.trim() || !form.phone.trim()) {
+      toast({ title: "Preencha nome e telefone", variant: "destructive" });
+      return;
+    }
+    const id = `wl-${Date.now()}`;
+    const contactId = `c-${Date.now()}`;
+    const newContact: Contact = {
+      id: contactId,
+      full_name: form.full_name.trim(),
+      phone_e164: form.phone.trim(),
+      email: form.email.trim() || null,
+      created_at: new Date().toISOString(),
+    };
+    const newProfile: WaitlistProfile = {
+      id,
+      contact_id: contactId,
+      contact: newContact,
+      status: "active",
+      priority_score: form.priority_score ? parseInt(form.priority_score) : null,
+      notes: form.notes.trim() || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const newPrefs: WaitlistPreferences = {
+      waitlist_id: id,
+      body_type: form.body_type,
+      preferred_makes: form.preferred_makes ? form.preferred_makes.split(",").map(s => s.trim().toLowerCase()).filter(Boolean) : null,
+      preferred_models: form.preferred_models ? form.preferred_models.split(",").map(s => s.trim().toLowerCase()).filter(Boolean) : null,
+      min_year: form.min_year ? parseInt(form.min_year) : null,
+      max_year: form.max_year ? parseInt(form.max_year) : null,
+      min_price: form.min_price ? parseFloat(form.min_price) : null,
+      max_price: form.max_price ? parseFloat(form.max_price) : null,
+      must_have: form.must_have ? form.must_have.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "_")).filter(Boolean) : null,
+      avoid: form.avoid ? form.avoid.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "_")).filter(Boolean) : null,
+      payment_preference: form.payment_preference,
+      has_kids: form.has_kids,
+      trunk_priority: form.trunk_priority ? parseInt(form.trunk_priority) : null,
+      updated_at: new Date().toISOString(),
+    };
+    // Add to local state
+    setProfiles(prev => [newProfile, ...prev]);
+    mockWaitlistPreferences[id] = newPrefs;
+    setForm({ ...emptyForm });
+    setAddDialogOpen(false);
+    toast({ title: "✅ Contato cadastrado!", description: `${newContact.full_name} adicionado à Lista Inteligente.` });
+  };
 
   const filteredProfiles = useMemo(() => {
     return mockWaitlistProfiles.filter(p => {
