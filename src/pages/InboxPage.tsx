@@ -75,7 +75,7 @@ const InboxPage = () => {
   return (
     <div className="flex h-screen">
       {/* Conversation list */}
-      <div className="w-[360px] border-r flex flex-col bg-card">
+      <div className="w-[360px] border-r flex flex-col glass-panel">
         <div className="p-4 border-b space-y-3">
           <h2 className="font-semibold text-lg">Inbox</h2>
           <div className="relative">
