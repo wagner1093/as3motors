@@ -140,7 +140,7 @@ const WaitlistPage = () => {
   };
 
   const filteredProfiles = useMemo(() => {
-    return mockWaitlistProfiles.filter(p => {
+    return profiles.filter(p => {
       const matchesSearch = p.contact.full_name.toLowerCase().includes(search.toLowerCase()) ||
         p.contact.phone_e164.includes(search);
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
