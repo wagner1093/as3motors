@@ -98,31 +98,31 @@ const PipelinePage = () => {
   }, 0);
 
   return (
-    <div className="relative flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
-      {/* Action buttons - fixed top right */}
-      <div className="absolute top-0 right-0 z-20 flex items-center gap-3">
-        <button
-          className="filter-pill flex items-center gap-2"
-          onClick={() => toast({ title: "Filtros", description: "Funcionalidade de filtros será conectada ao backend." })}
-        >
-          <Filter className="w-4 h-4" />
-          Filtrar
-        </button>
-        <button
-          className="filter-pill active flex items-center gap-2"
-          onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox e inicie uma conversa para criar um negócio." })}
-        >
-          <Plus className="w-4 h-4" />
-          Novo Negócio
-        </button>
-      </div>
-
-      {/* Header */}
-      <div className="shrink-0 pb-6">
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Pipeline</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {totalDeals} negócios · R$ {(totalValue / 1000).toFixed(0)}k em pipeline
-        </p>
+    <div className="flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
+      {/* Header with sticky buttons */}
+      <div className="shrink-0 pb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Pipeline</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {totalDeals} negócios · R$ {(totalValue / 1000).toFixed(0)}k em pipeline
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            className="filter-pill flex items-center gap-2"
+            onClick={() => toast({ title: "Filtros", description: "Funcionalidade de filtros será conectada ao backend." })}
+          >
+            <Filter className="w-4 h-4" />
+            Filtrar
+          </button>
+          <button
+            className="filter-pill active flex items-center gap-2"
+            onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox e inicie uma conversa para criar um negócio." })}
+          >
+            <Plus className="w-4 h-4" />
+            Novo Negócio
+          </button>
+        </div>
       </div>
 
       {/* Scrollable Kanban */}
