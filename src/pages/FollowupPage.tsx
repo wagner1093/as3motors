@@ -23,10 +23,10 @@ const FollowupPage = () => {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="page-header">
-        <h1>Follow-up</h1>
-        <p>Gerencie sequências automáticas de mensagens</p>
+    <div className="max-w-5xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Follow-up</h1>
+        <p className="text-sm text-muted-foreground mt-1">Gerencie sequências automáticas de mensagens</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -42,7 +42,7 @@ const FollowupPage = () => {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="stat-card"
+                  className="glass-card p-5"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div>
@@ -54,7 +54,7 @@ const FollowupPage = () => {
                   <div className="space-y-2.5">
                     {steps.map((step, j) => (
                       <div key={step.id} className="flex items-start gap-3 text-xs">
-                        <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center shrink-0 text-[11px] font-semibold">
+                        <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 text-[11px] font-semibold text-accent">
                           {j + 1}
                         </div>
                         <div>
@@ -87,7 +87,7 @@ const FollowupPage = () => {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="stat-card cursor-pointer hover:border-primary/20 transition-colors"
+                  className="glass-card p-5 cursor-pointer hover:border-accent/20 transition-colors"
                   onClick={() => navigate(`/inbox?conv=${conv.id}`)}
                 >
                   <div className="flex items-center justify-between">

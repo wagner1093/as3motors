@@ -75,12 +75,12 @@ const InboxPage = () => {
   return (
     <div className="flex h-screen">
       {/* Conversation list */}
-      <div className="w-[360px] border-r flex flex-col bg-card">
+      <div className="w-[360px] border-r flex flex-col glass-panel">
         <div className="p-4 border-b space-y-3">
           <h2 className="font-semibold text-lg">Inbox</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar contato..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-xl bg-secondary border-0" />
+            <Input placeholder="Buscar contato..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-xl glass-input border-0" />
           </div>
           <div className="flex gap-1.5">
             {[{ key: "all", label: "Todos" }, { key: "hot", label: "🔥 Quentes" }, { key: "warm", label: "🟡 Mornos" }, { key: "cold", label: "🔵 Frios" }].map(f => (
@@ -97,7 +97,7 @@ const InboxPage = () => {
               key={conv.id}
               onClick={() => setSelectedId(conv.id)}
               whileTap={{ scale: 0.98 }}
-              className={`w-full text-left p-4 border-b transition-all duration-200 ${selectedId === conv.id ? "bg-secondary" : "hover:bg-secondary/30"}`}
+              className={`w-full text-left p-4 border-b border-border/30 transition-all duration-200 ${selectedId === conv.id ? "bg-accent/5 border-l-2 border-l-accent" : "hover:bg-muted/30"}`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold shrink-0">
@@ -129,7 +129,7 @@ const InboxPage = () => {
       <div className="flex-1 flex flex-col">
         {selected ? (
           <>
-            <div className="p-4 border-b bg-card flex items-center justify-between">
+            <div className="p-4 border-b glass-panel flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold">
                   {selected.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
@@ -169,12 +169,12 @@ const InboxPage = () => {
               <div ref={chatEndRef} />
             </div>
 
-            <div className="p-4 border-t bg-card flex gap-3">
+            <div className="p-4 border-t glass-panel flex gap-3">
               <Input placeholder="Digite uma mensagem..." value={newMessage}
                 onChange={e => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 rounded-xl bg-secondary border-0 h-11" />
-              <Button size="icon" className="rounded-xl h-11 w-11" onClick={handleSend}>
+                className="flex-1 rounded-xl glass-input border-0 h-11" />
+              <Button size="icon" className="rounded-xl h-11 w-11 shadow-md" onClick={handleSend}>
                 <Send className="w-4 h-4" />
               </Button>
             </div>
@@ -186,13 +186,13 @@ const InboxPage = () => {
 
       {/* AI Panel */}
       {selected && (
-        <div className="w-[320px] border-l bg-card p-5 overflow-y-auto space-y-5">
+        <div className="w-[320px] border-l glass-panel p-5 overflow-y-auto space-y-5">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Bot className="w-4 h-4 text-accent" />
               <h3 className="text-sm font-semibold">Análise IA</h3>
             </div>
-            <div className="p-3 rounded-xl bg-secondary">
+             <div className="p-3 rounded-xl bg-muted/40 backdrop-blur-sm border border-border/30">
               <p className="text-sm text-muted-foreground leading-relaxed">{selected.ai_summary}</p>
             </div>
             <div className="mt-3 flex items-center gap-2">
@@ -209,7 +209,7 @@ const InboxPage = () => {
                 <Car className="w-4 h-4 text-muted-foreground" />
                 <h3 className="text-sm font-semibold">Carro de Interesse</h3>
               </div>
-              <div className="bg-secondary rounded-xl p-4 text-sm space-y-1.5 cursor-pointer hover:bg-muted transition-colors"
+              <div className="glass-card rounded-xl p-4 text-sm space-y-1.5 cursor-pointer hover:bg-muted/30 transition-colors"
                 onClick={() => navigate("/estoque")}>
                 <p className="font-semibold">{vehicle.make} {vehicle.model} {vehicle.year}</p>
                 <p className="text-muted-foreground">{vehicle.version} · {vehicle.color}</p>

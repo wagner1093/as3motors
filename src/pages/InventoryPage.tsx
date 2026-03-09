@@ -193,23 +193,23 @@ const InventoryPage = () => {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="page-header flex items-center justify-between">
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1>Estoque</h1>
-          <p>Gerencie seus veículos disponíveis</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Estoque</h1>
+          <p className="text-sm text-muted-foreground mt-1">Gerencie seus veículos disponíveis</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => { setForm({ ...emptyVehicle }); setAddDialogOpen(true); }} className="rounded-xl gap-2">
+          <Button onClick={() => { setForm({ ...emptyVehicle }); setAddDialogOpen(true); }} className="rounded-xl gap-2 shadow-md">
             <Plus className="w-4 h-4" /> Novo Veículo
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar veículo..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 w-64 rounded-xl bg-card border h-10" />
+          <Input placeholder="Buscar veículo..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 w-64 rounded-xl glass-input border-0 h-10" />
         </div>
         <div className="flex gap-1.5">
           {[
@@ -228,16 +228,16 @@ const InventoryPage = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-4 gap-4">
         {[
           { label: "Total", value: stats.total, icon: Car, accent: "text-foreground" },
-          { label: "Disponíveis", value: stats.available, icon: Car, accent: "text-emerald-600" },
-          { label: "Reservados", value: stats.reserved, icon: Shield, accent: "text-amber-600" },
-          { label: "Vendidos", value: stats.sold, icon: DollarSign, accent: "text-primary" },
+          { label: "Disponíveis", value: stats.available, icon: Car, accent: "text-success" },
+          { label: "Reservados", value: stats.reserved, icon: Shield, accent: "text-warning" },
+          { label: "Vendidos", value: stats.sold, icon: DollarSign, accent: "text-accent" },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }} className="stat-card flex items-center gap-4">
-            <div className={`p-2.5 rounded-xl bg-secondary ${s.accent}`}>
+            transition={{ delay: i * 0.05 }} className="glass-card p-5 flex items-center gap-4">
+            <div className={`p-2.5 rounded-xl bg-muted/50 ${s.accent}`}>
               <s.icon className="w-5 h-5" />
             </div>
             <div>
@@ -260,12 +260,13 @@ const InventoryPage = () => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.35 }}
-              className="stat-card group"
+              className="glass-card group overflow-hidden"
             >
-              <div className="h-44 bg-secondary rounded-xl flex items-center justify-center mb-4 overflow-hidden cursor-pointer"
+              <div className="h-44 bg-muted/40 rounded-xl flex items-center justify-center mb-4 overflow-hidden cursor-pointer mx-4 mt-4"
                 onClick={() => setExpandedVehicle(isExpanded ? null : vehicle.id)}>
                 <Car className="w-16 h-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-500" />
               </div>
+              <div className="px-5 pb-5">
 
               <div className="flex items-start justify-between mb-1">
                 <div>
@@ -375,6 +376,7 @@ const InventoryPage = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </div>
             </motion.div>
           );
         })}

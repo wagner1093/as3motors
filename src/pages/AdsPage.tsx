@@ -279,7 +279,6 @@ const AdsPage = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
         {[
           { label: "Investido", value: `R$ ${totals.spent.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "text-accent" },
@@ -290,7 +289,7 @@ const AdsPage = () => {
           { label: "CPC", value: `R$ ${totals.cpc.toFixed(2)}`, icon: MousePointerClick, color: "text-muted-foreground" },
           { label: "CTR", value: `${totals.ctr.toFixed(2)}%`, icon: TrendingUp, color: "text-success" },
         ].map((kpi) => (
-          <Card key={kpi.label} className="border-border/50">
+          <Card key={kpi.label} className="glass-card border-0">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-muted-foreground font-medium">{kpi.label}</span>
@@ -305,7 +304,7 @@ const AdsPage = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Leads over time */}
-        <Card className="lg:col-span-2 border-border/50">
+        <Card className="lg:col-span-2 glass-card border-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">Leads & Investimento por Dia</CardTitle>
           </CardHeader>
@@ -325,7 +324,7 @@ const AdsPage = () => {
         </Card>
 
         {/* Spent by campaign pie */}
-        <Card className="border-border/50">
+        <Card className="glass-card border-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">Investimento por Campanha</CardTitle>
           </CardHeader>
@@ -345,7 +344,7 @@ const AdsPage = () => {
       </div>
 
       {/* Campaigns Table */}
-      <Card className="border-border/50">
+      <Card className="glass-card border-0 overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
@@ -465,7 +464,7 @@ const AdsPage = () => {
           const periodSpent = dailyFiltered.reduce((s, d) => s + d.spent, 0);
 
           return (
-            <Card key={camp.id} className="border-border/50 overflow-hidden">
+            <Card key={camp.id} className="glass-card border-0 overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
