@@ -1,4 +1,4 @@
-import { Conversation, Message, Vehicle, Deal, Contact, FollowupSequence, FollowupStep, FollowupEnrollment } from "@/types/crm";
+import { Conversation, Message, Vehicle, Deal, Contact, FollowupSequence, FollowupStep, FollowupEnrollment, WaitlistProfile, WaitlistPreferences, WaitlistMatch, WaitlistNotification, ModelSimilarity } from "@/types/crm";
 
 export const mockContacts: Contact[] = [
   { id: "c1", full_name: "Carlos Silva", phone_e164: "+5511999001122", email: "carlos@email.com", created_at: "2025-03-01" },
