@@ -289,7 +289,7 @@ const AdsPage = () => {
           { label: "CPC", value: `R$ ${totals.cpc.toFixed(2)}`, icon: MousePointerClick, color: "text-muted-foreground" },
           { label: "CTR", value: `${totals.ctr.toFixed(2)}%`, icon: TrendingUp, color: "text-success" },
         ].map((kpi) => (
-          <Card key={kpi.label} className="border-border/50">
+          <Card key={kpi.label} className="glass-card border-0">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-muted-foreground font-medium">{kpi.label}</span>
