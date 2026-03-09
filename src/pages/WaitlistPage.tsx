@@ -1,0 +1,483 @@
+import { useState, useMemo } from "react";
+import { mockWaitlistProfiles, mockWaitlistPreferences, mockWaitlistMatches, mockWaitlistNotifications, defaultMessageTemplate } from "@/data/mockData";
+import { WaitlistProfile, WaitlistMatch, WaitlistNotification } from "@/types/crm";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search, ArrowLeft, MessageSquare, Eye, X, Send, Clock, Star,
+  CheckCircle2, XCircle, Pause, ChevronRight, Car, Phone, Mail,
+  Baby, Briefcase, Sparkles, AlertCircle
+} from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
+const statusConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
+  active: { label: "Ativo", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50" },
+  paused: { label: "Pausado", icon: Pause, color: "text-amber-600 bg-amber-50" },
+  converted: { label: "Convertido", icon: Star, color: "text-blue-600 bg-blue-50" },
+  inactive: { label: "Inativo", icon: XCircle, color: "text-muted-foreground bg-muted" },
+};
+
+const matchStatusConfig: Record<string, { label: string; color: string }> = {
+  suggested: { label: "Sugerido", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  contacted: { label: "Contatado", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  dismissed: { label: "Dispensado", color: "bg-muted text-muted-foreground border-border" },
+  converted: { label: "Convertido", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+};
+
+const reasonLabels: Record<string, string> = {
+  model_exact: "Modelo exato",
+  model_similar: "Modelo similar",
+  body_type: "Tipo de carroceria",
+  price_ok: "Preço na faixa",
+  year_ok: "Ano compatível",
+  must_have_hit: "Requisito atendido",
+};
+
+function getProfileSummary(wlId: string) {
+  const prefs = mockWaitlistPreferences[wlId];
+  if (!prefs) return "Sem preferências definidas";
+  const parts: string[] = [];
+  if (prefs.body_type !== "indefinido") parts.push(prefs.body_type.toUpperCase());
+  if (prefs.preferred_models?.length) parts.push(prefs.preferred_models.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join("/"));
+  if (prefs.max_price) parts.push(`até R$ ${(prefs.max_price / 1000).toFixed(0)}k`);
+  if (prefs.must_have?.length) parts.push(prefs.must_have.map(m => m.replace(/_/g, " ")).join(", "));
+  return parts.join(" · ") || "Sem preferências definidas";
+}
+
+function ScoreBadge({ score }: { score: number }) {
+  const color = score >= 80 ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+    : score >= 60 ? "text-amber-700 bg-amber-50 border-amber-200"
+    : "text-muted-foreground bg-muted border-border";
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${color}`}>
+      <Sparkles className="w-3 h-3" />
+      {score}%
+    </span>
+  );
+}
+
+const WaitlistPage = () => {
+  const [selectedProfile, setSelectedProfile] = useState<WaitlistProfile | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [sendMatch, setSendMatch] = useState<WaitlistMatch | null>(null);
+  const [messageText, setMessageText] = useState("");
+
+  const filteredProfiles = useMemo(() => {
+    return mockWaitlistProfiles.filter(p => {
+      const matchesSearch = p.contact.full_name.toLowerCase().includes(search.toLowerCase()) ||
+        p.contact.phone_e164.includes(search);
+      const matchesStatus = statusFilter === "all" || p.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [search, statusFilter]);
+
+  const profileMatches = useMemo(() => {
+    if (!selectedProfile) return [];
+    return mockWaitlistMatches
+      .filter(m => m.waitlist_id === selectedProfile.id)
+      .sort((a, b) => b.match_score - a.match_score);
+  }, [selectedProfile]);
+
+  const profileNotifications = useMemo(() => {
+    if (!selectedProfile) return [];
+    return mockWaitlistNotifications.filter(n => n.waitlist_id === selectedProfile.id);
+  }, [selectedProfile]);
+
+  const handleSendWhatsApp = (match: WaitlistMatch) => {
+    const profile = selectedProfile!;
+    const vehicle = match.vehicle!;
+    const text = defaultMessageTemplate
+      .replace("{nome}", profile.contact.full_name.split(" ")[0])
+      .replace("{modelo}", `${vehicle.make} ${vehicle.model}`)
+      .replace("{ano}", String(vehicle.year))
+      .replace("{versao}", vehicle.version || "")
+      .replace("{preco}", `R$ ${vehicle.price.toLocaleString("pt-BR")}`)
+      .replace("{km}", vehicle.km ? `${vehicle.km.toLocaleString("pt-BR")} km` : "");
+    setMessageText(text);
+    setSendMatch(match);
+    setSendDialogOpen(true);
+  };
+
+  const matchCountByProfile = useMemo(() => {
+    const counts: Record<string, number> = {};
+    mockWaitlistMatches.filter(m => m.status === "suggested").forEach(m => {
+      counts[m.waitlist_id] = (counts[m.waitlist_id] || 0) + 1;
+    });
+    return counts;
+  }, []);
+
+  // List View
+  if (!selectedProfile) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto">
+        <div className="page-header flex items-center justify-between">
+          <div>
+            <h1>Lista Inteligente</h1>
+            <p>Clientes aguardando veículos compatíveis com seu perfil</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)}
+                className="pl-9 w-64 rounded-xl bg-card border h-10" />
+            </div>
+            <div className="flex gap-1.5">
+              {[
+                { key: "all", label: "Todos" },
+                { key: "active", label: "Ativos" },
+                { key: "paused", label: "Pausados" },
+                { key: "converted", label: "Convertidos" },
+              ].map(f => (
+                <button key={f.key} onClick={() => setStatusFilter(f.key)}
+                  className={`filter-pill text-xs ${statusFilter === f.key ? "active" : ""}`}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Summary stats */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          {[
+            { label: "Ativos", value: mockWaitlistProfiles.filter(p => p.status === "active").length, icon: CheckCircle2, accent: "text-emerald-600" },
+            { label: "Com Matches", value: Object.keys(matchCountByProfile).length, icon: Sparkles, accent: "text-blue-600" },
+            { label: "Pausados", value: mockWaitlistProfiles.filter(p => p.status === "paused").length, icon: Pause, accent: "text-amber-600" },
+            { label: "Convertidos", value: mockWaitlistProfiles.filter(p => p.status === "converted").length, icon: Star, accent: "text-violet-600" },
+          ].map((s, i) => (
+            <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }} className="stat-card flex items-center gap-4">
+              <div className={`p-2.5 rounded-xl bg-secondary ${s.accent}`}>
+                <s.icon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{s.value}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Profile list */}
+        <div className="space-y-3">
+          {filteredProfiles.map((profile, i) => {
+            const st = statusConfig[profile.status];
+            const matchCount = matchCountByProfile[profile.id] || 0;
+            const lastNotif = mockWaitlistNotifications.filter(n => n.waitlist_id === profile.id).sort((a, b) => b.sent_at.localeCompare(a.sent_at))[0];
+            return (
+              <motion.div
+                key={profile.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                onClick={() => setSelectedProfile(profile)}
+                className="stat-card flex items-center gap-5 cursor-pointer group"
+              >
+                <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">
+                  {profile.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-semibold text-sm">{profile.contact.full_name}</span>
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${st.color}`}>
+                      <st.icon className="w-3 h-3" />
+                      {st.label}
+                    </span>
+                    {matchCount > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        <Sparkles className="w-3 h-3" />
+                        {matchCount} match{matchCount > 1 ? "es" : ""}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{getProfileSummary(profile.id)}</p>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground shrink-0">
+                  {profile.priority_score && (
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5" />
+                      <span className="font-medium">{profile.priority_score}</span>
+                    </div>
+                  )}
+                  {lastNotif && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{new Date(lastNotif.sent_at).toLocaleDateString("pt-BR")}</span>
+                    </div>
+                  )}
+                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Detail View
+  const prefs = mockWaitlistPreferences[selectedProfile.id];
+  const st = statusConfig[selectedProfile.status];
+
+  return (
+    <div className="p-8 max-w-7xl mx-auto">
+      {/* Back */}
+      <button onClick={() => setSelectedProfile(null)}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <ArrowLeft className="w-4 h-4" /> Voltar para lista
+      </button>
+
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="stat-card mb-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center text-lg font-bold text-muted-foreground">
+              {selectedProfile.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">{selectedProfile.contact.full_name}</h2>
+              <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{selectedProfile.contact.phone_e164}</span>
+                {selectedProfile.contact.email && (
+                  <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{selectedProfile.contact.email}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <span className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full ${st.color}`}>
+            <st.icon className="w-4 h-4" />
+            {st.label}
+          </span>
+        </div>
+        {selectedProfile.notes && (
+          <div className="mt-4 p-3 rounded-xl bg-secondary text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Observações: </span>{selectedProfile.notes}
+          </div>
+        )}
+      </motion.div>
+
+      <div className="grid grid-cols-3 gap-6">
+        {/* Preferences */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="stat-card col-span-1">
+          <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-muted-foreground" /> Preferências
+          </h3>
+          {prefs ? (
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Carroceria</span>
+                <span className="font-medium">{prefs.body_type.toUpperCase()}</span>
+              </div>
+              {prefs.preferred_models?.length ? (
+                <div className="flex justify-between items-start">
+                  <span className="text-muted-foreground">Modelos</span>
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {prefs.preferred_models.map(m => (
+                      <span key={m} className="text-[11px] px-2 py-0.5 rounded-full bg-secondary font-medium">{m}</span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {prefs.preferred_makes?.length ? (
+                <div className="flex justify-between items-start">
+                  <span className="text-muted-foreground">Marcas</span>
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {prefs.preferred_makes.map(m => (
+                      <span key={m} className="text-[11px] px-2 py-0.5 rounded-full bg-secondary font-medium">{m}</span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Faixa de preço</span>
+                <span className="font-medium">
+                  {prefs.min_price ? `R$ ${(prefs.min_price/1000).toFixed(0)}k` : "—"} – {prefs.max_price ? `R$ ${(prefs.max_price/1000).toFixed(0)}k` : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Ano</span>
+                <span className="font-medium">{prefs.min_year || "—"} – {prefs.max_year || "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Pagamento</span>
+                <span className="font-medium">{prefs.payment_preference}</span>
+              </div>
+              {prefs.has_kids !== null && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tem filhos</span>
+                  <span className="font-medium flex items-center gap-1">
+                    {prefs.has_kids ? <><Baby className="w-3.5 h-3.5" /> Sim</> : "Não"}
+                  </span>
+                </div>
+              )}
+              {prefs.trunk_priority != null && prefs.trunk_priority > 5 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Porta-malas</span>
+                  <span className="font-medium">Prioridade {prefs.trunk_priority}/10</span>
+                </div>
+              )}
+              {prefs.must_have?.length ? (
+                <div>
+                  <span className="text-muted-foreground text-xs block mb-1.5">Requisitos</span>
+                  <div className="flex flex-wrap gap-1">
+                    {prefs.must_have.map(m => (
+                      <span key={m} className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {m.replace(/_/g, " ")}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {prefs.avoid?.length ? (
+                <div>
+                  <span className="text-muted-foreground text-xs block mb-1.5">Evitar</span>
+                  <div className="flex flex-wrap gap-1">
+                    {prefs.avoid.map(m => (
+                      <span key={m} className="text-[11px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
+                        {m.replace(/_/g, " ")}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Nenhuma preferência cadastrada.</p>
+          )}
+        </motion.div>
+
+        {/* Matches */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-2 space-y-4">
+          <h3 className="font-semibold text-sm flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-blue-600" /> Veículos Sugeridos
+            {profileMatches.length > 0 && (
+              <span className="text-xs font-normal text-muted-foreground">({profileMatches.length} encontrados)</span>
+            )}
+          </h3>
+
+          {profileMatches.length === 0 ? (
+            <div className="stat-card flex flex-col items-center justify-center py-12 text-center">
+              <AlertCircle className="w-10 h-10 text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground">Nenhum veículo compatível no estoque atual.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {profileMatches.map((match, i) => {
+                const v = match.vehicle!;
+                const mst = matchStatusConfig[match.status];
+                return (
+                  <motion.div key={match.id} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06 }} className="stat-card">
+                    <div className="flex items-start gap-4">
+                      <div className="w-20 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                        <Car className="w-8 h-8 text-muted-foreground/20" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold">{v.make} {v.model}</span>
+                          <span className="text-sm text-muted-foreground">{v.version} · {v.year}</span>
+                          <ScoreBadge score={match.match_score} />
+                          <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${mst.color}`}>
+                            {mst.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm mb-2">
+                          <span className="font-bold">R$ {v.price.toLocaleString("pt-BR")}</span>
+                          {v.km != null && <span className="text-muted-foreground">{v.km.toLocaleString("pt-BR")} km</span>}
+                          {v.color && <span className="text-muted-foreground">{v.color}</span>}
+                        </div>
+                        {/* Match reasons */}
+                        <div className="flex flex-wrap gap-1.5">
+                          {Object.entries(match.match_reasons).map(([key, val]) => (
+                            <span key={key} className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
+                              val ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-muted text-muted-foreground border-border line-through opacity-50"
+                            }`}>
+                              {reasonLabels[key] || key}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        <Button size="sm" variant="outline" className="rounded-xl text-xs gap-1.5 h-8"
+                          onClick={() => handleSendWhatsApp(match)}>
+                          <Send className="w-3.5 h-3.5" /> WhatsApp
+                        </Button>
+                        <Button size="sm" variant="ghost" className="rounded-xl text-xs gap-1.5 h-8">
+                          <Eye className="w-3.5 h-3.5" /> Ver veículo
+                        </Button>
+                        {match.status === "suggested" && (
+                          <Button size="sm" variant="ghost" className="rounded-xl text-xs gap-1.5 h-8 text-muted-foreground">
+                            <X className="w-3.5 h-3.5" /> Dispensar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Notification history */}
+          {profileNotifications.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
+                <Clock className="w-4 h-4 text-muted-foreground" /> Histórico de Avisos
+              </h3>
+              <div className="space-y-2">
+                {profileNotifications.map(notif => (
+                  <div key={notif.id} className="p-3 rounded-xl bg-secondary text-sm flex items-start gap-3">
+                    <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {new Date(notif.sent_at).toLocaleDateString("pt-BR")} às {new Date(notif.sent_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        {notif.vehicle && <> · {notif.vehicle.make} {notif.vehicle.model}</>}
+                      </p>
+                      <p className="text-sm">{notif.message_text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Send WhatsApp Dialog */}
+      <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="w-4 h-4" /> Enviar WhatsApp
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground">
+              Para: <span className="font-medium text-foreground">{selectedProfile.contact.full_name}</span> ({selectedProfile.contact.phone_e164})
+            </div>
+            {sendMatch?.vehicle && (
+              <div className="text-sm text-muted-foreground">
+                Veículo: <span className="font-medium text-foreground">{sendMatch.vehicle.make} {sendMatch.vehicle.model} {sendMatch.vehicle.year}</span>
+              </div>
+            )}
+            <Textarea value={messageText} onChange={e => setMessageText(e.target.value)}
+              rows={4} className="rounded-xl text-sm" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSendDialogOpen(false)} className="rounded-xl">Cancelar</Button>
+            <Button onClick={() => { setSendDialogOpen(false); }} className="rounded-xl gap-2">
+              <Send className="w-4 h-4" /> Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default WaitlistPage;
