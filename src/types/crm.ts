@@ -40,7 +40,7 @@ export interface Vehicle {
   color: string | null;
   km: number | null;
   price: number;
-  status: "available" | "reserved" | "sold";
+  status: "available" | "reserved" | "sold" | "repasse";
   drive_folder_url: string | null;
   commission_percent: number;
   commission_value: number;
