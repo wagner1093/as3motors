@@ -169,12 +169,12 @@ const InboxPage = () => {
               <div ref={chatEndRef} />
             </div>
 
-            <div className="p-4 border-t bg-card flex gap-3">
+            <div className="p-4 border-t glass-panel flex gap-3">
               <Input placeholder="Digite uma mensagem..." value={newMessage}
                 onChange={e => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 rounded-xl bg-secondary border-0 h-11" />
-              <Button size="icon" className="rounded-xl h-11 w-11" onClick={handleSend}>
+                className="flex-1 rounded-xl glass-input border-0 h-11" />
+              <Button size="icon" className="rounded-xl h-11 w-11 shadow-md" onClick={handleSend}>
                 <Send className="w-4 h-4" />
               </Button>
             </div>
