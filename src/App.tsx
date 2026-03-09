@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/estoque" element={<InventoryPage />} />
             <Route path="/followup" element={<FollowupPage />} />
             <Route path="/lista-inteligente" element={<WaitlistPage />} />
+            <Route path="/repasse" element={<RepassePage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
