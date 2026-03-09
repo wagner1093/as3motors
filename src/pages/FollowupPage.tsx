@@ -87,7 +87,7 @@ const FollowupPage = () => {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="stat-card cursor-pointer hover:border-primary/20 transition-colors"
+                  className="glass-card p-5 cursor-pointer hover:border-accent/20 transition-colors"
                   onClick={() => navigate(`/inbox?conv=${conv.id}`)}
                 >
                   <div className="flex items-center justify-between">
