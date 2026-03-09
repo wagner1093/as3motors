@@ -324,7 +324,7 @@ const AdsPage = () => {
         </Card>
 
         {/* Spent by campaign pie */}
-        <Card className="border-border/50">
+        <Card className="glass-card border-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">Investimento por Campanha</CardTitle>
           </CardHeader>
