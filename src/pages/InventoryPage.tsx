@@ -148,12 +148,19 @@ const InventoryPage = () => {
     }
     try {
       const data = buildVehicleData();
-      await createVehicle.mutateAsync({
+      const result = await createVehicle.mutateAsync({
         brand: data.brand!,
         model: data.model!,
         ...data,
       });
+      // Upload pending photos
+      if (pendingFiles.length > 0 && result?.id) {
+        for (let i = 0; i < pendingFiles.length; i++) {
+          await uploadImage.mutateAsync({ vehicleId: result.id, file: pendingFiles[i], position: i });
+        }
+      }
       setForm({ ...emptyForm });
+      setPendingFiles([]);
       setAddDialogOpen(false);
       toast({ title: "✅ Veículo adicionado!", description: `${form.brand} ${form.model}` });
     } catch (err: any) {
