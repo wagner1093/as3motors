@@ -14,7 +14,289 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contacts: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          lead_source: string | null
+          name: string
+          notes: string | null
+          payment_type: string | null
+          phone: string | null
+          preferences: string | null
+          source: string | null
+          status: string | null
+          urgency: string | null
+          vehicle_interest: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          lead_source?: string | null
+          name: string
+          notes?: string | null
+          payment_type?: string | null
+          phone?: string | null
+          preferences?: string | null
+          source?: string | null
+          status?: string | null
+          urgency?: string | null
+          vehicle_interest?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          lead_source?: string | null
+          name?: string
+          notes?: string | null
+          payment_type?: string | null
+          phone?: string | null
+          preferences?: string | null
+          source?: string | null
+          status?: string | null
+          urgency?: string | null
+          vehicle_interest?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          ai_intent: string | null
+          ai_stage: string | null
+          ai_summary: string | null
+          assigned_to: string | null
+          channel: string | null
+          contact_id: string | null
+          created_at: string | null
+          id: string
+          last_message: string | null
+          last_message_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_intent?: string | null
+          ai_stage?: string | null
+          ai_summary?: string | null
+          assigned_to?: string | null
+          channel?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_intent?: string | null
+          ai_stage?: string | null
+          ai_summary?: string | null
+          assigned_to?: string | null
+          channel?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          notified_at: string | null
+          payment_type: string | null
+          stage: string | null
+          updated_at: string | null
+          urgency: string | null
+          value: number | null
+          vehicle_id: string | null
+          vehicle_interest: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          notified_at?: string | null
+          payment_type?: string | null
+          stage?: string | null
+          updated_at?: string | null
+          urgency?: string | null
+          value?: number | null
+          vehicle_id?: string | null
+          vehicle_interest?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          notified_at?: string | null
+          payment_type?: string | null
+          stage?: string | null
+          updated_at?: string | null
+          urgency?: string | null
+          value?: number | null
+          vehicle_id?: string | null
+          vehicle_interest?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string | null
+          direction: string | null
+          id: string
+          phone: string | null
+          sender: string | null
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          phone?: string | null
+          sender?: string | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          phone?: string | null
+          sender?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          deal_id: string | null
+          id: string
+          message: string
+          read: boolean | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          brand: string | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          mileage: number | null
+          model: string | null
+          price: number | null
+          status: string | null
+          year: number | null
+        }
+        Insert: {
+          brand?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          mileage?: number | null
+          model?: string | null
+          price?: number | null
+          status?: string | null
+          year?: number | null
+        }
+        Update: {
+          brand?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          mileage?: number | null
+          model?: string | null
+          price?: number | null
+          status?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
