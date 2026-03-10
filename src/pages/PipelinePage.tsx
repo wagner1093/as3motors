@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import NewDealDialog from "@/components/NewDealDialog";
 
 const paymentLabels: Record<string, string> = {
   a_vista: "À Vista",
@@ -22,6 +23,7 @@ const PipelinePage = () => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [draggedDeal, setDraggedDeal] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+  const [newDealOpen, setNewDealOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -111,7 +113,7 @@ const PipelinePage = () => {
           </button>
           <button
             className="filter-pill active flex items-center gap-2"
-            onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox para criar um negócio." })}
+            onClick={() => setNewDealOpen(true)}
           >
             <Plus className="w-4 h-4" />
             Novo Negócio
@@ -347,6 +349,8 @@ const PipelinePage = () => {
           })}
         </div>
       </div>
+
+      <NewDealDialog open={newDealOpen} onOpenChange={setNewDealOpen} />
     </div>
   );
 };

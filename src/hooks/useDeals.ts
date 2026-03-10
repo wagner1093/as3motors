@@ -69,22 +69,110 @@ export function useUpdateDealStage() {
   });
 }
 
-export function useConversationByContact(contactId: string | null) {
-  return useQuery({
-    queryKey: ["conversation", contactId],
-    queryFn: async () => {
-      if (!contactId) return null;
-      const { data, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("contact_id", contactId)
-        .order("last_message_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+export function useCreateDeal() {
+  const queryClient = useQueryClient();
 
+  return useMutation({
+    mutationFn: async (params: {
+      contactName: string;
+      contactPhone?: string;
+      contactEmail?: string;
+      vehicleInterest?: string;
+      paymentType?: string;
+      urgency?: string;
+      value?: number;
+      notes?: string;
+      stage?: string;
+    }) => {
+      // 1. Create or find contact
+      let contactId: string;
+      
+      if (params.contactPhone) {
+        const { data: existing } = await supabase
+          .from("contacts")
+          .select("id")
+          .or(`phone.eq.${params.contactPhone},whatsapp.eq.${params.contactPhone}`)
+          .limit(1)
+          .maybeSingle();
+        
+        if (existing) {
+          contactId = existing.id;
+        } else {
+          const { data: newContact, error: contactError } = await supabase
+            .from("contacts")
+            .insert({
+              name: params.contactName,
+              phone: params.contactPhone,
+              whatsapp: params.contactPhone,
+              email: params.contactEmail || null,
+            })
+            .select("id")
+            .single();
+          if (contactError) throw contactError;
+          contactId = newContact.id;
+        }
+      } else {
+        const { data: newContact, error: contactError } = await supabase
+          .from("contacts")
+          .insert({
+            name: params.contactName,
+            email: params.contactEmail || null,
+          })
+          .select("id")
+          .single();
+        if (contactError) throw contactError;
+        contactId = newContact.id;
+      }
+
+      // 2. Create deal
+      const { data: deal, error: dealError } = await supabase
+        .from("deals")
+        .insert({
+          contact_id: contactId,
+          vehicle_interest: params.vehicleInterest || null,
+          payment_type: params.paymentType || null,
+          urgency: params.urgency || null,
+          value: params.value || null,
+          notes: params.notes || null,
+          stage: params.stage || "new",
+        })
+        .select("id")
+        .single();
+
+      if (dealError) throw dealError;
+      return deal;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+    },
+  });
+}
+
+export function useContacts() {
+  return useQuery({
+    queryKey: ["contacts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("id, name, phone, whatsapp, email")
+        .order("name");
       if (error) throw error;
       return data;
     },
-    enabled: !!contactId,
+  });
+}
+
+export function useVehiclesAvailable() {
+  return useQuery({
+    queryKey: ["vehicles-available"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, brand, model, year, price, color, status")
+        .in("status", ["available", "reserved"])
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
   });
 }
