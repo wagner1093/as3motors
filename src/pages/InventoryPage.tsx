@@ -356,6 +356,16 @@ const InventoryPage = () => {
         </>
       )}
 
+      {/* Fotos */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-3">Fotos</div>
+      <div className="col-span-2">
+        <VehiclePhotoUpload
+          vehicleId={editingVehicle?.id}
+          pendingFiles={!editingVehicle ? pendingFiles : undefined}
+          onPendingFilesChange={!editingVehicle ? setPendingFiles : undefined}
+        />
+      </div>
+
       {/* Descrição */}
       <div className="col-span-2 space-y-1.5 pt-2">
         <Label className="text-xs">Descrição / Observações</Label>
