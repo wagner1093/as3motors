@@ -300,7 +300,15 @@ export type Database = {
           armored: boolean | null
           brand: string | null
           color: string | null
+          commission_armor: number | null
+          commission_as3: number | null
+          commission_external: number | null
+          commission_financing: number | null
           condition: string | null
+          cost_detailing: number | null
+          cost_documentation: number | null
+          cost_other: number | null
+          cost_repairs: number | null
           created_at: string | null
           description: string | null
           electric_trunk: boolean | null
@@ -311,8 +319,10 @@ export type Database = {
           leather_seats: boolean | null
           mileage: number | null
           model: string | null
+          notes_internal: string | null
           power: string | null
           price: number | null
+          purchase_price: number | null
           status: string | null
           sunroof: boolean | null
           version: string | null
@@ -324,7 +334,15 @@ export type Database = {
           armored?: boolean | null
           brand?: string | null
           color?: string | null
+          commission_armor?: number | null
+          commission_as3?: number | null
+          commission_external?: number | null
+          commission_financing?: number | null
           condition?: string | null
+          cost_detailing?: number | null
+          cost_documentation?: number | null
+          cost_other?: number | null
+          cost_repairs?: number | null
           created_at?: string | null
           description?: string | null
           electric_trunk?: boolean | null
@@ -335,8 +353,10 @@ export type Database = {
           leather_seats?: boolean | null
           mileage?: number | null
           model?: string | null
+          notes_internal?: string | null
           power?: string | null
           price?: number | null
+          purchase_price?: number | null
           status?: string | null
           sunroof?: boolean | null
           version?: string | null
@@ -348,7 +368,15 @@ export type Database = {
           armored?: boolean | null
           brand?: string | null
           color?: string | null
+          commission_armor?: number | null
+          commission_as3?: number | null
+          commission_external?: number | null
+          commission_financing?: number | null
           condition?: string | null
+          cost_detailing?: number | null
+          cost_documentation?: number | null
+          cost_other?: number | null
+          cost_repairs?: number | null
           created_at?: string | null
           description?: string | null
           electric_trunk?: boolean | null
@@ -359,8 +387,10 @@ export type Database = {
           leather_seats?: boolean | null
           mileage?: number | null
           model?: string | null
+          notes_internal?: string | null
           power?: string | null
           price?: number | null
+          purchase_price?: number | null
           status?: string | null
           sunroof?: boolean | null
           version?: string | null
