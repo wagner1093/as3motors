@@ -216,6 +216,9 @@ const PipelinePage = () => {
                                   </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => { setEditDeal(deal); }}>
+                                    <Pencil className="w-4 h-4 mr-2" /> Editar
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => navigate(`/inbox`)}>
                                     <MessageSquare className="w-4 h-4 mr-2" /> Abrir conversa
                                   </DropdownMenuItem>
