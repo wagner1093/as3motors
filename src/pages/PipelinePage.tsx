@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import NewDealDialog from "@/components/NewDealDialog";
 
 const paymentLabels: Record<string, string> = {
   a_vista: "À Vista",
