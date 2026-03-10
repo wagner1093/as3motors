@@ -1,377 +1,503 @@
-import { useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { mockDeals as initialDeals, mockConversations, mockVehicles, PIPELINE_STAGES } from "@/data/mockData";
-import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
-import { Phone, Mail, Car, CreditCard, Calendar, Clock, ArrowRightLeft, ChevronRight, Flame, Snowflake, Sun, MessageSquare, MoreHorizontal, Plus, Filter, RotateCcw, GripVertical } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { useToast } from "@/hooks/use-toast";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import type { Deal } from "@/types/crm";
+typescript
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Car,
+  Phone,
+  Mail,
+  Calendar,
+  MessageSquare,
+  ChevronDown,
+  ChevronRight,
+  Info,
+  DollarSign,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Users,
+  Wallet,
+  Zap,
+  FileText,
+  Truck,
+  User,
+  Hash,
+  Tag,
+  MapPin,
+  Gauge,
+  Palette,
+  CalendarDays,
+  Euro,
+  ClipboardList,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { useToast } from '@/components/ui/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
-const paymentLabels: Record<string, string> = {
-  a_vista: "À Vista",
-  financiamento: "Financiamento",
-  troca: "Troca",
-  misto: "Misto",
-  indefinido: "Indefinido",
+// --- Inferred Types based on Supabase schema and mockData ---
+// These types should ideally be in src/integrations/supabase/types.ts
+// For now, they are defined here for completeness.
+interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  whatsapp?: string;
+  lead_source?: string;
+  payment_type?: string;
+  urgency?: string;
+  vehicle_interest?: string;
+  status?: string;
+  created_at?: string;
+}
+
+interface Vehicle {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  price: number;
+  color?: string;
+  mileage?: number;
+  status?: string;
+  description?: string;
+  created_at?: string;
+}
+
+interface Conversation {
+  id: string;
+  contact_id: string;
+  status: string;
+  channel: string;
+  assigned_to?: string;
+  created_at?: string;
+  updated_at?: string;
+  ai_summary?: string;
+  ai_intent?: string;
+  ai_stage?: string;
+  last_message?: string;
+  last_message_at?: string;
+}
+
+interface Deal {
+  id: string;
+  contact_id: string;
+  vehicle_id?: string;
+  stage: string;
+  value?: number;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  vehicle_interest?: string;
+  payment_type?: string;
+  urgency?: string;
+  // Joined data from other tables
+  contact?: Contact;
+  vehicle?: Vehicle;
+  conversation?: Conversation;
+}
+
+// --- Static Data (from mockData.ts, now embedded or imported if shared) ---
+const PIPELINE_STAGES = [
+  { key: 'new', label: 'Novo Lead', color: 'bg-blue-500' },
+  { key: 'contacted', label: 'Contatado', color: 'bg-yellow-500' },
+  { key: 'negotiation', label: 'Negociação', color: 'bg-purple-500' },
+  { key: 'proposal', label: 'Proposta', color: 'bg-indigo-500' },
+  { key: 'closed_won', label: 'Fechado Ganho', color: 'bg-green-500' },
+  { key: 'closed_lost', label: 'Fechado Perdido', color: 'bg-red-500' },
+];
+
+const paymentLabels: { [key: string]: string } = {
+  financiamento: 'Financiamento',
+  a_vista: 'À Vista',
+  troca: 'Troca',
 };
 
-const PipelinePage = () => {
-  const [deals, setDeals] = useState<Deal[]>(initialDeals);
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const [draggedDeal, setDraggedDeal] = useState<string | null>(null);
-  const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+export function PipelinePage() {
+  const [deals, setDeals] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expandedDealId, setExpandedDealId] = useState(null);
+
+  const draggingDealId = useRef(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const getDealData = (deal: Deal) => {
-    const conv = mockConversations.find(c => c.id === deal.conversation_id);
-    const vehicle = deal.vehicle_interest_id ? mockVehicles.find(v => v.id === deal.vehicle_interest_id) : null;
-    return { conv, vehicle };
-  };
+  // --- Data Fetching from Supabase ---
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [
+          { data: dealsData, error: dealsError },
+          { data: contactsData, error: contactsError },
+          { data: vehiclesData, error: vehiclesError },
+          { data: conversationsData, error: conversationsError },
+        ] = await Promise.all([
+          supabase.from('deals').select('*'),
+          supabase.from('contacts').select('*'),
+          supabase.from('vehicles').select('*'),
+          supabase.from('conversations').select('*'),
+        ]);
 
-  const interestConfig = (label: string) => {
-    if (label === "hot") return { icon: Flame, text: "Quente", className: "lead-badge-hot" };
-    if (label === "warm") return { icon: Sun, text: "Morno", className: "lead-badge-warm" };
-    return { icon: Snowflake, text: "Frio", className: "lead-badge-cold" };
-  };
+        if (dealsError) throw dealsError;
+        if (contactsError) throw contactsError;
+        if (vehiclesError) throw vehiclesError;
+        if (conversationsError) throw conversationsError;
 
-  const stageTotal = (stageKey: string) => {
-    return deals
-      .filter(d => d.stage === stageKey)
-      .reduce((sum, d) => {
-        const v = d.vehicle_interest_id ? mockVehicles.find(v => v.id === d.vehicle_interest_id) : null;
-        return sum + (v?.price || 0);
-      }, 0);
-  };
-
-  // Drag handlers
-  const handleDragStart = (e: React.DragEvent, dealId: string) => {
-    setDraggedDeal(dealId);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", dealId);
-  };
-
-  const handleDragOver = (e: React.DragEvent, stageKey: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverStage(stageKey);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverStage(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, targetStage: string) => {
-    e.preventDefault();
-    const dealId = e.dataTransfer.getData("text/plain");
-    if (!dealId) return;
-
-    setDeals(prev => prev.map(d => {
-      if (d.id === dealId && d.stage !== targetStage) {
-        const conv = mockConversations.find(c => c.id === d.conversation_id);
-        const stageLabel = PIPELINE_STAGES.find(s => s.key === targetStage)?.label || targetStage;
+        setDeals(dealsData || []);
+        setContacts(contactsData || []);
+        setVehicles(vehiclesData || []);
+        setConversations(conversationsData || []);
+      } catch (err: any) {
+        console.error('Error fetching data:', err);
+        setError(`Failed to load data: ${err.message}`);
         toast({
-          title: `Movido para ${stageLabel}`,
-          description: conv?.contact.full_name || "",
+          title: 'Erro ao carregar dados',
+          description: `Não foi possível carregar os dados do pipeline: ${err.message}`,
+          variant: 'destructive',
         });
-        return { ...d, stage: targetStage };
+      } finally {
+        setLoading(false);
       }
-      return d;
-    }));
-    setDraggedDeal(null);
-    setDragOverStage(null);
-  };
+    };
 
-  const handleDragEnd = () => {
-    setDraggedDeal(null);
-    setDragOverStage(null);
-  };
+    fetchAllData();
 
-  const totalDeals = deals.length;
-  const totalValue = deals.reduce((sum, d) => {
-    const v = d.vehicle_interest_id ? mockVehicles.find(v => v.id === d.vehicle_interest_id) : null;
-    return sum + (v?.price || 0);
-  }, 0);
+    // --- Realtime Subscription ---
+    const dealsChannel = supabase
+      .channel('public:deals')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, payload => {
+        setDeals(prevDeals => {
+          if (payload.eventType === 'INSERT') {
+            return [...prevDeals, payload.new as Deal];
+          } else if (payload.eventType === 'UPDATE') {
+            return prevDeals.map(deal =>
+              deal.id === payload.old.id ? (payload.new as Deal) : deal
+            );
+          } else if (payload.eventType === 'DELETE') {
+            return prevDeals.filter(deal => deal.id !== payload.old.id);
+          }
+          return prevDeals;
+        });
+      })
+      .subscribe();
+
+    const contactsChannel = supabase
+      .channel('public:contacts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts' }, payload => {
+        setContacts(prevContacts => {
+          if (payload.eventType === 'INSERT') {
+            return [...prevContacts, payload.new as Contact];
+          } else if (payload.eventType === 'UPDATE') {
+            return prevContacts.map(contact =>
+              contact.id === payload.old.id ? (payload.new as Contact) : contact
+            );
+          } else if (payload.eventType === 'DELETE') {
+            return prevContacts.filter(contact => contact.id !== payload.old.id);
+          }
+          return prevContacts;
+        });
+      })
+      .subscribe();
+
+    const vehiclesChannel = supabase
+      .channel('public:vehicles')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, payload => {
+        setVehicles(prevVehicles => {
+          if (payload.eventType === 'INSERT') {
+            return [...prevVehicles, payload.new as Vehicle];
+          } else if (payload.eventType === 'UPDATE') {
+            return prevVehicles.map(vehicle =>
+              vehicle.id === payload.id ? (payload.new as Vehicle) : vehicle
+            );
+          } else if (payload.eventType === 'DELETE') {
+            return prevVehicles.filter(vehicle => vehicle.id !== payload.old.id);
+          }
+          return prevVehicles;
+        });
+      })
+      .subscribe();
+
+    const conversationsChannel = supabase
+      .channel('public:conversations')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, payload => {
+        setConversations(prevConversations => {
+          if (payload.eventType === 'INSERT') {
+            return [...prevConversations, payload.new as Conversation];
+          } else if (payload.eventType === 'UPDATE') {
+            return prevConversations.map(conversation =>
+              conversation.id === payload.old.id ? (payload.new as Conversation) : conversation
+            );
+          } else if (payload.eventType === 'DELETE') {
+            return prevConversations.filter(conversation => conversation.id !== payload.old.id);
+          }
+          return prevConversations;
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(dealsChannel);
+      supabase.removeChannel(contactsChannel);
+      supabase.removeChannel(vehiclesChannel);
+      supabase.removeChannel(conversationsChannel);
+    };
+  }, [toast]);
+
+  // --- Helper Functions ---
+  const getDealData = useCallback((deal: Deal) => {
+    const contact = contacts.find(c => c.id === deal.contact_id);
+    const vehicle = vehicles.find(v => v.id === deal.vehicle_id);
+    const conversation = conversations.find(conv => conv.contact_id === deal.contact_id); // Assuming 1 conv per contact for simplicity
+    return { ...deal, contact, vehicle, conversation };
+  }, [contacts, vehicles, conversations]);
+
+  const interestConfig = useCallback((interest: string | undefined) => {
+    if (!interest) return { icon: , color: 'bg-gray-500' };
+    if (interest.includes('financiamento')) return { icon: , color: 'bg-blue-500' };
+    if (interest.includes('a_vista')) return { icon: , color: 'bg-green-500' };
+    if (interest.includes('troca')) return { icon: , color: 'bg-yellow-500' };
+    return { icon: , color: 'bg-gray-500' };
+  }, []);
+
+  const stageTotal = useCallback((stageKey: string) => {
+    const stageDeals = deals.filter(deal => deal.stage === stageKey);
+    const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+    return { count: stageDeals.length, value: totalValue };
+  }, [deals]);
+
+  // --- Drag and Drop Handlers ---
+  const handleDragStart = useCallback((e: React.DragEvent, dealId: string) => {
+    draggingDealId.current = dealId;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dealId);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('border-dashed', 'border-2', 'border-blue-400');
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.currentTarget.classList.remove('border-dashed', 'border-2', 'border-blue-400');
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent, targetStageKey: string) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('border-dashed', 'border-2', 'border-blue-400');
+    const dealId = e.dataTransfer.getData('text/plain');
+
+    if (dealId && draggingDealId.current === dealId) {
+      await handleStageChange(dealId, targetStageKey);
+      draggingDealId.current = null;
+    }
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    draggingDealId.current = null;
+  }, []);
+
+  const handleToggleExpand = useCallback((dealId: string) => {
+    setExpandedDealId(prevId => (prevId === dealId ? null : dealId));
+  }, []);
+
+  const handleStageChange = useCallback(async (dealId: string, targetStage: string) => {
+    try {
+      const { error: updateError } = await supabase
+        .from('deals')
+        .update({ stage: targetStage, updated_at: new Date().toISOString() })
+        .eq('id', dealId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: 'Deal atualizado',
+        description: `Deal movido para a etapa "${PIPELINE_STAGES.find(s => s.key === targetStage)?.label}".`,
+      });
+    } catch (err: any) {
+      console.error('Error updating deal stage:', err);
+      toast({
+        title: 'Erro ao mover deal',
+        description: `Não foi possível mover o deal: ${err.message}`,
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
+  if (loading) {
+    return (
+      
+        Carregando Pipeline...
+      
+    );
+  }
+
+  if (error) {
+    return (
+      
+        Erro: {error}
+      
+    );
+  }
 
   return (
-    <div className="relative flex flex-col min-w-0 overflow-hidden h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
-      {/* Header */}
-      <div className="shrink-0 pb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {totalDeals} negócios · R$ {(totalValue / 1000).toFixed(0)}k em pipeline
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            className="filter-pill flex items-center gap-2"
-            onClick={() => toast({ title: "Filtros", description: "Funcionalidade de filtros será conectada ao backend." })}
-          >
-            <Filter className="w-4 h-4" />
-            Filtrar
-          </button>
-          <button
-            className="filter-pill active flex items-center gap-2"
-            onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox e inicie uma conversa para criar um negócio." })}
-          >
-            <Plus className="w-4 h-4" />
-            Novo Negócio
-          </button>
-        </div>
-      </div>
+    
+      Pipeline de Vendas
 
-      {/* Scrollable Kanban */}
-      <div className="flex-1 min-w-0 overflow-x-auto overflow-y-hidden -mx-6 lg:-mx-8 px-6 lg:px-8">
-        <div className="flex gap-4 h-full pb-4" style={{ minWidth: "fit-content" }}>
-          {PIPELINE_STAGES.map((stage, stageIdx) => {
-            const stageDeals = deals.filter(d => d.stage === stage.key);
-            const total = stageTotal(stage.key);
-            const isDragOver = dragOverStage === stage.key;
+      
+        
+          {PIPELINE_STAGES.map(stage => {
+            const { count, value } = stageTotal(stage.key);
+            const stageDeals = deals.filter(deal => deal.stage === stage.key).map(getDealData);
 
             return (
-              <div
-                key={stage.key}
-                className={cn(
-                  "rounded-2xl p-4 flex flex-col transition-all duration-200",
-                  isDragOver
-                    ? "bg-accent/10 ring-2 ring-accent/30"
-                    : "bg-muted/70",
-                )}
-                style={{ width: 340, minWidth: 340, maxHeight: "100%" }}
-                onDragOver={(e) => handleDragOver(e, stage.key)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, stage.key)}
+               handleDrop(e, stage.key)}
               >
-                {/* Column Header */}
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-foreground">{stage.label}</h3>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-background text-muted-foreground border border-border">
-                      {stageDeals.length}
-                    </span>
-                  </div>
-                  {total > 0 && (
-                    <span className="text-xs font-semibold text-muted-foreground">
-                      R$ {(total / 1000).toFixed(0)}k
-                    </span>
-                  )}
-                </div>
+                
+                  
+                    {stage.label}
+                  
+                  
+                    {count} Deals ({value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})
+                  
+                
 
-                {/* Scrollable Cards */}
-                <div className="flex-1 overflow-y-auto space-y-3 pr-1" style={{ scrollbarWidth: "thin" }}>
-                  <AnimatePresence mode="popLayout">
-                    {stageDeals.map((deal, i) => {
-                      const { conv, vehicle } = getDealData(deal);
-                      if (!conv) return null;
-                      const interest = interestConfig(conv.ai_interest_label);
-                      const InterestIcon = interest.icon;
-                      const isExpanded = expandedCard === deal.id;
-                      const isDragging = draggedDeal === deal.id;
+                
+                  
+                    {stageDeals.map(deal => (
+                      
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -50 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm p-4 cursor-grab active:cursor-grabbing"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, deal.id)}
+                        onDragEnd={handleDragEnd}
+                        onClick={() => handleToggleExpand(deal.id)}
+                      >
+                        
+                          
+                             {deal.contact?.name || 'Cliente Desconhecido'}
+                          
+                          
+                            
+                              
+                            
+                            
+                              {PIPELINE_STAGES.filter(s => s.key !== deal.stage).map(s => (
+                                 { e.stopPropagation(); handleStageChange(deal.id, s.key); }}>
+                                  Mover para {s.label}
+                                
+                              ))}
+                            
+                          
+                        
 
-                      return (
-                        <motion.div
-                          key={deal.id}
-                          layout
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: isDragging ? 0.5 : 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, deal.id)}
-                          onDragEnd={handleDragEnd}
-                          className={cn(
-                            "kanban-card group relative",
-                            isDragging && "opacity-50 ring-2 ring-accent",
+                        
+                           {deal.vehicle_interest || deal.vehicle?.model || 'Veículo não especificado'}
+                        
+
+                        
+                          {deal.payment_type && (
+                            
+                              {interestConfig(deal.payment_type).icon} {paymentLabels[deal.payment_type] || deal.payment_type}
+                            
                           )}
-                          onClick={() => setExpandedCard(isExpanded ? null : deal.id)}
-                        >
-                          {/* Drag Handle */}
-                          <div className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-40 transition-opacity cursor-grab active:cursor-grabbing">
-                            <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
-                          </div>
+                          {deal.urgency && (
+                            
+                               {deal.urgency === 'decided' ? 'Urgente' : 'Pesquisando'}
+                            
+                          )}
+                          {deal.value && (
+                            
+                               {deal.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            
+                          )}
+                        
 
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-sm font-semibold text-foreground border border-border">
-                                {conv.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">{conv.contact.full_name}</p>
-                                <p className="text-xs text-muted-foreground">{conv.contact.phone_e164}</p>
-                              </div>
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button
-                                  className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-secondary"
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => navigate(`/inbox?conv=${conv.id}`)}>
-                                  <MessageSquare className="w-4 h-4 mr-2" /> Abrir conversa
-                                </DropdownMenuItem>
-                                {PIPELINE_STAGES.filter(s => s.key !== deal.stage).map(s => (
-                                  <DropdownMenuItem key={s.key} onClick={() => {
-                                    setDeals(prev => prev.map(d => d.id === deal.id ? { ...d, stage: s.key } : d));
-                                    toast({ title: `Movido para ${s.label}`, description: conv.contact.full_name });
-                                  }}>
-                                    Mover para {s.label}
-                                  </DropdownMenuItem>
-                                ))}
-                                <DropdownMenuItem onClick={() => navigate("/followup")}>
-                                  <RotateCcw className="w-4 h-4 mr-2" /> Iniciar Follow-up
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className={`${interest.className} flex items-center gap-1`}>
-                              <InterestIcon className="w-3 h-3" />
-                              {interest.text}
-                            </span>
-                            <span className="text-xs text-muted-foreground">Score: {conv.ai_interest_score}</span>
-                            {conv.source_channel && (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground ml-auto">
-                                {conv.source_channel}
-                              </span>
-                            )}
-                          </div>
-
-                          {vehicle && (
-                            <div
-                              className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/80 mb-3 cursor-pointer hover:bg-secondary transition-colors"
-                              onClick={(e) => { e.stopPropagation(); navigate("/estoque"); }}
+                        
+                          {expandedDealId === deal.id && (
+                            
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="overflow-hidden pt-3 border-t border-gray-200 dark:border-gray-600"
                             >
-                              <Car className="w-4 h-4 text-muted-foreground shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium truncate">
-                                  {vehicle.make} {vehicle.model} {vehicle.year}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground">{vehicle.version} • {vehicle.color}</p>
-                              </div>
-                              <span className="text-sm font-bold whitespace-nowrap">
-                                R$ {(vehicle.price / 1000).toFixed(0)}k
-                              </span>
-                            </div>
+                              
+                                
+                                
+                                  **Resumo IA:** {deal.conversation?.ai_summary || 'Nenhum resumo disponível.'}
+                                
+                              
+                              {deal.contact?.phone && (
+                                
+                                   {deal.contact.phone}
+                                
+                              )}
+                              {deal.contact?.email && (
+                                
+                                   {deal.contact.email}
+                                
+                              )}
+                              {deal.contact?.whatsapp && (
+                                
+                                   {deal.contact.whatsapp}
+                                
+                              )}
+                              {deal.created_at && (
+                                
+                                   Criado em: {format(new Date(deal.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                                
+                              )}
+                              {deal.updated_at && (
+                                
+                                   Última atualização: {format(new Date(deal.updated_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                                
+                              )}
+                              {deal.notes && (
+                                
+                                   Notas: {deal.notes}
+                                
+                              )}
+                              {deal.vehicle && (
+                                
+                                  
+                                     Detalhes do Veículo:
+                                  
+                                  
+                                     {deal.vehicle.brand} {deal.vehicle.model} ({deal.vehicle.year})
+                                     {deal.vehicle.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                     {deal.vehicle.color}
+                                     {deal.vehicle.mileage?.toLocaleString('pt-BR')} km
+                                  
+                                
+                              )}
+                            
                           )}
-
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className="text-[11px] font-medium gap-1">
-                              <CreditCard className="w-3 h-3" />
-                              {paymentLabels[deal.payment_type] || deal.payment_type}
-                            </Badge>
-                            {deal.tradein_description && (
-                              <Badge variant="outline" className="text-[11px] font-medium gap-1">
-                                <ArrowRightLeft className="w-3 h-3" />
-                                Troca
-                              </Badge>
-                            )}
-                          </div>
-
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.25 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="mt-3 pt-3 border-t space-y-3">
-                                  <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
-                                    <p className="text-[11px] font-semibold text-accent-foreground mb-1 flex items-center gap-1">
-                                      <MessageSquare className="w-3 h-3" /> Resumo IA
-                                    </p>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">{conv.ai_summary}</p>
-                                  </div>
-
-                                  {deal.tradein_description && (
-                                    <div className="text-xs space-y-1">
-                                      <p className="font-medium flex items-center gap-1">
-                                        <ArrowRightLeft className="w-3 h-3 text-muted-foreground" />
-                                        Veículo na troca
-                                      </p>
-                                      <p className="text-muted-foreground pl-4">{deal.tradein_description}</p>
-                                      {deal.tradein_value_expected && (
-                                        <p className="font-semibold pl-4">Valor esperado: R$ {deal.tradein_value_expected.toLocaleString("pt-BR")}</p>
-                                      )}
-                                    </div>
-                                  )}
-
-                                  <div className="flex gap-2">
-                                    <a
-                                      href={`tel:${conv.contact.phone_e164}`}
-                                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
-                                      onClick={e => e.stopPropagation()}
-                                    >
-                                      <Phone className="w-3.5 h-3.5" /> Ligar
-                                    </a>
-                                    <button
-                                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
-                                      onClick={(e) => { e.stopPropagation(); navigate(`/inbox?conv=${conv.id}`); }}
-                                    >
-                                      <MessageSquare className="w-3.5 h-3.5" /> Chat
-                                    </button>
-                                    {conv.contact.email && (
-                                      <a
-                                        href={`mailto:${conv.contact.email}`}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
-                                        onClick={e => e.stopPropagation()}
-                                      >
-                                        <Mail className="w-3.5 h-3.5" /> Email
-                                      </a>
-                                    )}
-                                  </div>
-
-                                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    Última msg: {format(new Date(conv.last_message_at), "dd MMM, HH:mm", { locale: ptBR })}
-                                  </p>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-
-                          {deal.next_action && (
-                            <div className="mt-3 pt-3 border-t flex items-start gap-2">
-                              <Calendar className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-                              <div className="flex-1">
-                                <p className="text-[11px] text-foreground font-medium">{deal.next_action}</p>
-                                {deal.next_action_at && (
-                                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                                    {format(new Date(deal.next_action_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                                  </p>
-                                )}
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                            </div>
-                          )}
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                  {stageDeals.length === 0 && (
-                    <div className="text-center py-8 text-xs text-muted-foreground rounded-xl border-2 border-dashed border-border/50">
-                      Arraste um card aqui
-                    </div>
-                  )}
-                </div>
-              </div>
+                        
+                      
+                    ))}
+                  
+                
+              
             );
           })}
-        </div>
-      </div>
-    </div>
+        
+      
+    
   );
-};
-
-export default PipelinePage;
+}
