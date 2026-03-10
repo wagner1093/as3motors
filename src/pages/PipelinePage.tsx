@@ -113,7 +113,7 @@ const PipelinePage = () => {
           </button>
           <button
             className="filter-pill active flex items-center gap-2"
-            onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox para criar um negócio." })}
+            onClick={() => setNewDealOpen(true)}
           >
             <Plus className="w-4 h-4" />
             Novo Negócio
