@@ -144,7 +144,7 @@ const InventoryPage = () => {
     }
   };
 
-  const VehicleFormFields = () => (
+  const vehicleFormFields = (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
         <Label className="text-xs">Marca *</Label>
