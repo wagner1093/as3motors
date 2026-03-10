@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import DashboardPage from "@/pages/DashboardPage";
 import InboxPage from "@/pages/InboxPage";
@@ -24,21 +26,23 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/inbox" element={<InboxPage />} />
-            <Route path="/pipeline" element={<PipelinePage />} />
-            <Route path="/estoque" element={<InventoryPage />} />
-            <Route path="/followup" element={<FollowupPage />} />
-            <Route path="/lista-inteligente" element={<WaitlistPage />} />
-            <Route path="/repasse" element={<RepassePage />} />
-            <Route path="/ads" element={<AdsPage />} />
-            <Route path="/configuracoes" element={<SettingsPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/inbox" element={<InboxPage />} />
+              <Route path="/pipeline" element={<PipelinePage />} />
+              <Route path="/estoque" element={<InventoryPage />} />
+              <Route path="/followup" element={<FollowupPage />} />
+              <Route path="/lista-inteligente" element={<WaitlistPage />} />
+              <Route path="/repasse" element={<RepassePage />} />
+              <Route path="/ads" element={<AdsPage />} />
+              <Route path="/configuracoes" element={<SettingsPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
