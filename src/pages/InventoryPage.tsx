@@ -87,6 +87,17 @@ const InventoryPage = () => {
   const createVehicle = useCreateVehicle();
   const editVehicle = useEditVehicle();
   const deleteVehicle = useDeleteVehicle();
+  const uploadImage = useUploadVehicleImage();
+
+  const vehicleIds = useMemo(() => vehicles.map(v => v.id), [vehicles]);
+  const { data: allImages = [] } = useAllVehicleImages(vehicleIds);
+  const imagesByVehicle = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const img of allImages) {
+      if (!map[img.vehicle_id]) map[img.vehicle_id] = img.url;
+    }
+    return map;
+  }, [allImages]);
 
   const updateForm = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }));
 
