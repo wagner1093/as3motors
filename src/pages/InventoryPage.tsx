@@ -144,7 +144,7 @@ const InventoryPage = () => {
     }
   };
 
-  const VehicleFormFields = () => (
+  const vehicleFormFields = (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
         <Label className="text-xs">Marca *</Label>
@@ -351,7 +351,7 @@ const InventoryPage = () => {
               <Plus className="w-5 h-5" /> Novo Veículo
             </DialogTitle>
           </DialogHeader>
-          <VehicleFormFields />
+          {vehicleFormFields}
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddDialogOpen(false)} className="rounded-xl">Cancelar</Button>
             <Button onClick={handleAdd} disabled={createVehicle.isPending} className="rounded-xl gap-2">
@@ -369,7 +369,7 @@ const InventoryPage = () => {
               <Edit className="w-5 h-5" /> Editar Veículo
             </DialogTitle>
           </DialogHeader>
-          <VehicleFormFields />
+          {vehicleFormFields}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="rounded-xl">Cancelar</Button>
             <Button onClick={handleSaveEdit} disabled={editVehicle.isPending} className="rounded-xl gap-2">
