@@ -443,7 +443,11 @@ const InventoryPage = () => {
               <motion.div key={vehicle.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03, duration: 0.35 }} className="glass-card group overflow-hidden">
                 <div className="h-44 bg-muted/40 rounded-xl flex items-center justify-center mb-4 overflow-hidden mx-4 mt-4">
-                  <Car className="w-16 h-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-500" />
+                  {imagesByVehicle[vehicle.id] ? (
+                    <img src={imagesByVehicle[vehicle.id]} alt={`${vehicle.brand} ${vehicle.model}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <Car className="w-16 h-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-500" />
+                  )}
                 </div>
                 <div className="px-5 pb-5">
                   <div className="flex items-start justify-between mb-1">
