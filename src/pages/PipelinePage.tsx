@@ -363,6 +363,7 @@ const PipelinePage = () => {
       </div>
 
       <NewDealDialog open={newDealOpen} onOpenChange={setNewDealOpen} />
+      <EditDealDialog deal={editDeal} open={!!editDeal} onOpenChange={(open) => { if (!open) setEditDeal(null); }} />
     </div>
   );
 };
