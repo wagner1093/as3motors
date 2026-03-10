@@ -369,7 +369,7 @@ const InventoryPage = () => {
               <Edit className="w-5 h-5" /> Editar Veículo
             </DialogTitle>
           </DialogHeader>
-          <VehicleFormFields />
+          {vehicleFormFields}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="rounded-xl">Cancelar</Button>
             <Button onClick={handleSaveEdit} disabled={editVehicle.isPending} className="rounded-xl gap-2">
