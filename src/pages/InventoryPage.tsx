@@ -80,6 +80,7 @@ const InventoryPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<SupabaseVehicle | null>(null);
   const [form, setForm] = useState<VehicleForm>({ ...emptyForm });
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
   const { data: vehicles = [], isLoading } = useAllVehicles();
