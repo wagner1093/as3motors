@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAllVehicles, useCreateVehicle, useEditVehicle, useDeleteVehicle, SupabaseVehicle } from "@/hooks/useVehicles";
 import {
-  Search, ExternalLink, Car, Users, Plus,
-  Edit, Trash2, MoreHorizontal, DollarSign, Gauge, Palette, Calendar,
-  Shield, FileText
+  Search, Car, Plus, Edit, Trash2, MoreHorizontal, DollarSign, Gauge, Palette, Calendar,
+  Shield, FileText, ExternalLink, Fuel, Zap, Armchair
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,10 +28,48 @@ const statusMap: Record<string, { label: string; color: string }> = {
   repasse: { label: "Repasse", color: "bg-primary/10 text-primary border-primary/20" },
 };
 
-const emptyForm = {
-  brand: "", model: "", year: "2024", color: "", mileage: "",
-  price: "", status: "available" as VehicleStatus, description: "",
+interface VehicleForm {
+  brand: string;
+  model: string;
+  version: string;
+  year: string;
+  color: string;
+  mileage: string;
+  price: string;
+  status: VehicleStatus;
+  description: string;
+  condition: string;
+  engine: string;
+  power: string;
+  leather_seats: boolean;
+  sunroof: boolean;
+  electric_trunk: boolean;
+  fuel: string;
+  armored: boolean;
+  armor_type: string;
+  armor_company: string;
+  glass_brand: string;
+}
+
+const emptyForm: VehicleForm = {
+  brand: "", model: "", version: "", year: "2024", color: "", mileage: "",
+  price: "", status: "available", description: "", condition: "", engine: "",
+  power: "", leather_seats: false, sunroof: false, electric_trunk: false,
+  fuel: "", armored: false, armor_type: "", armor_company: "", glass_brand: "",
 };
+
+// Format price string: "1500000" -> "1.500.000"
+function formatPriceDisplay(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("pt-BR");
+}
+
+// Parse formatted price back to number
+function parsePriceValue(formatted: string): number {
+  const digits = formatted.replace(/\D/g, "");
+  return Number(digits) || 0;
+}
 
 const InventoryPage = () => {
   const [search, setSearch] = useState("");
@@ -40,8 +77,7 @@ const InventoryPage = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<SupabaseVehicle | null>(null);
-  const [form, setForm] = useState({ ...emptyForm });
-  const navigate = useNavigate();
+  const [form, setForm] = useState<VehicleForm>({ ...emptyForm });
   const { toast } = useToast();
 
   const { data: vehicles = [], isLoading } = useAllVehicles();
@@ -49,10 +85,15 @@ const InventoryPage = () => {
   const editVehicle = useEditVehicle();
   const deleteVehicle = useDeleteVehicle();
 
-  const updateForm = (field: string, value: string) => setForm(f => ({ ...f, [field]: value }));
+  const updateForm = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }));
+
+  const handlePriceChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    updateForm("price", digits);
+  };
 
   const filtered = vehicles.filter(v => {
-    const text = `${v.brand || ""} ${v.model || ""} ${v.year || ""} ${v.color || ""}`.toLowerCase();
+    const text = `${v.brand || ""} ${v.model || ""} ${v.version || ""} ${v.year || ""} ${v.color || ""}`.toLowerCase();
     return text.includes(search.toLowerCase()) && (statusFilter === "all" || v.status === statusFilter);
   });
 
@@ -63,21 +104,40 @@ const InventoryPage = () => {
     sold: vehicles.filter(v => v.status === "sold").length,
   };
 
+  const buildVehicleData = () => ({
+    brand: form.brand.trim() || null,
+    model: form.model.trim() || null,
+    version: form.version.trim() || null,
+    year: parseInt(form.year) || null,
+    color: form.color.trim() || null,
+    mileage: form.mileage ? parseInt(form.mileage) : null,
+    price: form.price ? parsePriceValue(form.price) : null,
+    status: form.status || null,
+    description: form.description.trim() || null,
+    condition: form.condition.trim() || null,
+    engine: form.engine.trim() || null,
+    power: form.power.trim() || null,
+    leather_seats: form.leather_seats,
+    sunroof: form.sunroof,
+    electric_trunk: form.electric_trunk,
+    fuel: form.fuel.trim() || null,
+    armored: form.armored,
+    armor_type: form.armored ? (form.armor_type.trim() || null) : null,
+    armor_company: form.armored ? (form.armor_company.trim() || null) : null,
+    glass_brand: form.armored ? (form.glass_brand.trim() || null) : null,
+  });
+
   const handleAdd = async () => {
     if (!form.brand.trim() || !form.model.trim() || !form.price) {
       toast({ title: "Preencha marca, modelo e preço", variant: "destructive" });
       return;
     }
     try {
+      const data = buildVehicleData();
       await createVehicle.mutateAsync({
-        brand: form.brand.trim(),
-        model: form.model.trim(),
-        year: parseInt(form.year) || 2024,
-        color: form.color.trim() || undefined,
-        mileage: form.mileage ? parseInt(form.mileage) : undefined,
-        price: parseFloat(form.price),
-        status: form.status,
-        description: form.description.trim() || undefined,
+        brand: data.brand!,
+        model: data.model!,
+        ...data,
       });
       setForm({ ...emptyForm });
       setAddDialogOpen(false);
@@ -92,12 +152,24 @@ const InventoryPage = () => {
     setForm({
       brand: v.brand || "",
       model: v.model || "",
+      version: v.version || "",
       year: String(v.year || 2024),
       color: v.color || "",
       mileage: v.mileage != null ? String(v.mileage) : "",
       price: v.price != null ? String(v.price) : "",
       status: (v.status as VehicleStatus) || "available",
       description: v.description || "",
+      condition: v.condition || "",
+      engine: v.engine || "",
+      power: v.power || "",
+      leather_seats: v.leather_seats ?? false,
+      sunroof: v.sunroof ?? false,
+      electric_trunk: v.electric_trunk ?? false,
+      fuel: v.fuel || "",
+      armored: v.armored ?? false,
+      armor_type: v.armor_type || "",
+      armor_company: v.armor_company || "",
+      glass_brand: v.glass_brand || "",
     });
     setEditDialogOpen(true);
   };
@@ -107,16 +179,7 @@ const InventoryPage = () => {
     try {
       await editVehicle.mutateAsync({
         vehicleId: editingVehicle.id,
-        data: {
-          brand: form.brand.trim() || null,
-          model: form.model.trim() || null,
-          year: parseInt(form.year) || null,
-          color: form.color.trim() || null,
-          mileage: form.mileage ? parseInt(form.mileage) : null,
-          price: form.price ? parseFloat(form.price) : null,
-          status: form.status || null,
-          description: form.description.trim() || null,
-        },
+        data: buildVehicleData(),
       });
       setEditDialogOpen(false);
       setEditingVehicle(null);
@@ -145,7 +208,9 @@ const InventoryPage = () => {
   };
 
   const vehicleFormFields = (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+      {/* Dados principais */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-1">Dados do Veículo</div>
       <div className="space-y-1.5">
         <Label className="text-xs">Marca *</Label>
         <Input placeholder="Toyota" value={form.brand} onChange={e => updateForm("brand", e.target.value)} className="rounded-xl" />
@@ -153,6 +218,10 @@ const InventoryPage = () => {
       <div className="space-y-1.5">
         <Label className="text-xs">Modelo *</Label>
         <Input placeholder="Corolla" value={form.model} onChange={e => updateForm("model", e.target.value)} className="rounded-xl" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Versão</Label>
+        <Input placeholder="XEi 2.0 Flex" value={form.version} onChange={e => updateForm("version", e.target.value)} className="rounded-xl" />
       </div>
       <div className="space-y-1.5">
         <Label className="text-xs">Ano</Label>
@@ -163,14 +232,55 @@ const InventoryPage = () => {
         <Input placeholder="Prata" value={form.color} onChange={e => updateForm("color", e.target.value)} className="rounded-xl" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Km</Label>
+        <Label className="text-xs">Preço (R$) *</Label>
+        <Input
+          placeholder="1.500.000"
+          value={formatPriceDisplay(form.price)}
+          onChange={e => handlePriceChange(e.target.value)}
+          className="rounded-xl"
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">KM</Label>
         <Input type="number" placeholder="18000" value={form.mileage} onChange={e => updateForm("mileage", e.target.value)} className="rounded-xl" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Preço (R$) *</Label>
-        <Input type="number" placeholder="125000" value={form.price} onChange={e => updateForm("price", e.target.value)} className="rounded-xl" />
+        <Label className="text-xs">Condição</Label>
+        <Select value={form.condition} onValueChange={v => updateForm("condition", v)}>
+          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="novo">Novo (0km)</SelectItem>
+            <SelectItem value="seminovo">Seminovo</SelectItem>
+            <SelectItem value="usado">Usado</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      <div className="col-span-2 space-y-1.5">
+
+      {/* Motor e performance */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-3">Motor & Performance</div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Motor</Label>
+        <Input placeholder="2.0 Turbo" value={form.engine} onChange={e => updateForm("engine", e.target.value)} className="rounded-xl" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Potência</Label>
+        <Input placeholder="272 cv" value={form.power} onChange={e => updateForm("power", e.target.value)} className="rounded-xl" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Combustível</Label>
+        <Select value={form.fuel} onValueChange={v => updateForm("fuel", v)}>
+          <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="flex">Flex</SelectItem>
+            <SelectItem value="gasolina">Gasolina</SelectItem>
+            <SelectItem value="etanol">Etanol</SelectItem>
+            <SelectItem value="diesel">Diesel</SelectItem>
+            <SelectItem value="eletrico">Elétrico</SelectItem>
+            <SelectItem value="hibrido">Híbrido</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
         <Label className="text-xs">Status</Label>
         <Select value={form.status} onValueChange={v => updateForm("status", v)}>
           <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
@@ -182,7 +292,51 @@ const InventoryPage = () => {
           </SelectContent>
         </Select>
       </div>
-      <div className="col-span-2 space-y-1.5">
+
+      {/* Opcionais */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-3">Opcionais</div>
+      <div className="col-span-2 flex flex-wrap gap-5">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox checked={form.leather_seats} onCheckedChange={v => updateForm("leather_seats", !!v)} />
+          <span className="text-sm">Bancos de Couro</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox checked={form.sunroof} onCheckedChange={v => updateForm("sunroof", !!v)} />
+          <span className="text-sm">Teto Solar</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox checked={form.electric_trunk} onCheckedChange={v => updateForm("electric_trunk", !!v)} />
+          <span className="text-sm">Mala Elétrica</span>
+        </label>
+      </div>
+
+      {/* Blindagem */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-3">Blindagem</div>
+      <div className="col-span-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox checked={form.armored} onCheckedChange={v => updateForm("armored", !!v)} />
+          <span className="text-sm font-medium">Veículo Blindado</span>
+        </label>
+      </div>
+      {form.armored && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Tipo de Blindagem</Label>
+            <Input placeholder="Nível III-A" value={form.armor_type} onChange={e => updateForm("armor_type", e.target.value)} className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Blindadora</Label>
+            <Input placeholder="Carbon" value={form.armor_company} onChange={e => updateForm("armor_company", e.target.value)} className="rounded-xl" />
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label className="text-xs">Marca do Vidro</Label>
+            <Input placeholder="O'Gara" value={form.glass_brand} onChange={e => updateForm("glass_brand", e.target.value)} className="rounded-xl" />
+          </div>
+        </>
+      )}
+
+      {/* Descrição */}
+      <div className="col-span-2 space-y-1.5 pt-2">
         <Label className="text-xs">Descrição / Observações</Label>
         <Textarea placeholder="Versão, detalhes, comissão, link Drive..." value={form.description} onChange={e => updateForm("description", e.target.value)} className="rounded-xl" rows={3} />
       </div>
@@ -196,11 +350,9 @@ const InventoryPage = () => {
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Estoque</h1>
           <p className="text-sm text-muted-foreground mt-1">Gerencie seus veículos disponíveis</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => { setForm({ ...emptyForm }); setAddDialogOpen(true); }} className="rounded-xl gap-2 shadow-md">
-            <Plus className="w-4 h-4" /> Novo Veículo
-          </Button>
-        </div>
+        <Button onClick={() => { setForm({ ...emptyForm }); setAddDialogOpen(true); }} className="rounded-xl gap-2 shadow-md">
+          <Plus className="w-4 h-4" /> Novo Veículo
+        </Button>
       </div>
 
       <div className="flex items-center gap-3">
@@ -257,13 +409,8 @@ const InventoryPage = () => {
           {filtered.map((vehicle, i) => {
             const st = statusMap[vehicle.status || "available"] || statusMap.available;
             return (
-              <motion.div
-                key={vehicle.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03, duration: 0.35 }}
-                className="glass-card group overflow-hidden"
-              >
+              <motion.div key={vehicle.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03, duration: 0.35 }} className="glass-card group overflow-hidden">
                 <div className="h-44 bg-muted/40 rounded-xl flex items-center justify-center mb-4 overflow-hidden mx-4 mt-4">
                   <Car className="w-16 h-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-500" />
                 </div>
@@ -271,7 +418,7 @@ const InventoryPage = () => {
                   <div className="flex items-start justify-between mb-1">
                     <div>
                       <h3 className="font-semibold text-base">{vehicle.brand} {vehicle.model}</h3>
-                      <p className="text-sm text-muted-foreground">{vehicle.year}</p>
+                      <p className="text-sm text-muted-foreground">{vehicle.version && `${vehicle.version} · `}{vehicle.year}</p>
                     </div>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${st.color}`}>
                       {st.label}
@@ -282,10 +429,11 @@ const InventoryPage = () => {
                     R$ {(vehicle.price || 0).toLocaleString("pt-BR")}
                   </p>
 
-                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                     {vehicle.color && <span className="flex items-center gap-1"><Palette className="w-3 h-3" /> {vehicle.color}</span>}
                     {vehicle.mileage != null && <span className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {vehicle.mileage.toLocaleString("pt-BR")} km</span>}
-                    {vehicle.year && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {vehicle.year}</span>}
+                    {vehicle.fuel && <span className="flex items-center gap-1"><Fuel className="w-3 h-3" /> {vehicle.fuel}</span>}
+                    {vehicle.armored && <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Blindado</span>}
                   </div>
 
                   {vehicle.description && (
@@ -306,20 +454,16 @@ const InventoryPage = () => {
                           <Edit className="w-3.5 h-3.5" /> Editar veículo
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleChangeStatus(vehicle.id, "available")}
-                          disabled={vehicle.status === "available"} className="gap-2 text-xs">
+                        <DropdownMenuItem onClick={() => handleChangeStatus(vehicle.id, "available")} disabled={vehicle.status === "available"} className="gap-2 text-xs">
                           <Car className="w-3.5 h-3.5 text-emerald-600" /> Marcar Disponível
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleChangeStatus(vehicle.id, "reserved")}
-                          disabled={vehicle.status === "reserved"} className="gap-2 text-xs">
+                        <DropdownMenuItem onClick={() => handleChangeStatus(vehicle.id, "reserved")} disabled={vehicle.status === "reserved"} className="gap-2 text-xs">
                           <Shield className="w-3.5 h-3.5 text-amber-600" /> Marcar Reservado
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleChangeStatus(vehicle.id, "sold")}
-                          disabled={vehicle.status === "sold"} className="gap-2 text-xs">
+                        <DropdownMenuItem onClick={() => handleChangeStatus(vehicle.id, "sold")} disabled={vehicle.status === "sold"} className="gap-2 text-xs">
                           <DollarSign className="w-3.5 h-3.5 text-destructive" /> Marcar Vendido
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleChangeStatus(vehicle.id, "repasse")}
-                          disabled={vehicle.status === "repasse"} className="gap-2 text-xs">
+                        <DropdownMenuItem onClick={() => handleChangeStatus(vehicle.id, "repasse")} disabled={vehicle.status === "repasse"} className="gap-2 text-xs">
                           <ExternalLink className="w-3.5 h-3.5 text-primary" /> Marcar Repasse
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
