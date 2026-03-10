@@ -260,39 +260,75 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          armor_company: string | null
+          armor_type: string | null
+          armored: boolean | null
           brand: string | null
           color: string | null
+          condition: string | null
           created_at: string | null
           description: string | null
+          electric_trunk: boolean | null
+          engine: string | null
+          fuel: string | null
+          glass_brand: string | null
           id: string
+          leather_seats: boolean | null
           mileage: number | null
           model: string | null
+          power: string | null
           price: number | null
           status: string | null
+          sunroof: boolean | null
+          version: string | null
           year: number | null
         }
         Insert: {
+          armor_company?: string | null
+          armor_type?: string | null
+          armored?: boolean | null
           brand?: string | null
           color?: string | null
+          condition?: string | null
           created_at?: string | null
           description?: string | null
+          electric_trunk?: boolean | null
+          engine?: string | null
+          fuel?: string | null
+          glass_brand?: string | null
           id?: string
+          leather_seats?: boolean | null
           mileage?: number | null
           model?: string | null
+          power?: string | null
           price?: number | null
           status?: string | null
+          sunroof?: boolean | null
+          version?: string | null
           year?: number | null
         }
         Update: {
+          armor_company?: string | null
+          armor_type?: string | null
+          armored?: boolean | null
           brand?: string | null
           color?: string | null
+          condition?: string | null
           created_at?: string | null
           description?: string | null
+          electric_trunk?: boolean | null
+          engine?: string | null
+          fuel?: string | null
+          glass_brand?: string | null
           id?: string
+          leather_seats?: boolean | null
           mileage?: number | null
           model?: string | null
+          power?: string | null
           price?: number | null
           status?: string | null
+          sunroof?: boolean | null
+          version?: string | null
           year?: number | null
         }
         Relationships: []
