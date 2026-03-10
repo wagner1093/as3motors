@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import NewDealDialog from "@/components/NewDealDialog";
+import EditDealDialog from "@/components/EditDealDialog";
 
 const paymentLabels: Record<string, string> = {
   a_vista: "À Vista",
