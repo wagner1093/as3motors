@@ -25,6 +25,7 @@ const PipelinePage = () => {
   const [draggedDeal, setDraggedDeal] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [newDealOpen, setNewDealOpen] = useState(false);
+  const [editDeal, setEditDeal] = useState<DealWithRelations | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
