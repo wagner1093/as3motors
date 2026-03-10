@@ -23,6 +23,7 @@ const PipelinePage = () => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [draggedDeal, setDraggedDeal] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+  const [newDealOpen, setNewDealOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
