@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAllVehicles, useCreateVehicle, useEditVehicle, useDeleteVehicle, SupabaseVehicle } from "@/hooks/useVehicles";
+import { useAllVehicleImages, useUploadVehicleImage } from "@/hooks/useVehicleImages";
+import { VehiclePhotoUpload } from "@/components/VehiclePhotoUpload";
 import {
   Search, Car, Plus, Edit, Trash2, MoreHorizontal, DollarSign, Gauge, Palette, Calendar,
   Shield, FileText, ExternalLink, Fuel, Zap, Armchair
@@ -78,12 +80,24 @@ const InventoryPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<SupabaseVehicle | null>(null);
   const [form, setForm] = useState<VehicleForm>({ ...emptyForm });
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
   const { data: vehicles = [], isLoading } = useAllVehicles();
   const createVehicle = useCreateVehicle();
   const editVehicle = useEditVehicle();
   const deleteVehicle = useDeleteVehicle();
+  const uploadImage = useUploadVehicleImage();
+
+  const vehicleIds = useMemo(() => vehicles.map(v => v.id), [vehicles]);
+  const { data: allImages = [] } = useAllVehicleImages(vehicleIds);
+  const imagesByVehicle = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const img of allImages) {
+      if (!map[img.vehicle_id]) map[img.vehicle_id] = img.url;
+    }
+    return map;
+  }, [allImages]);
 
   const updateForm = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }));
 
@@ -134,12 +148,19 @@ const InventoryPage = () => {
     }
     try {
       const data = buildVehicleData();
-      await createVehicle.mutateAsync({
+      const result = await createVehicle.mutateAsync({
         brand: data.brand!,
         model: data.model!,
         ...data,
       });
+      // Upload pending photos
+      if (pendingFiles.length > 0 && result?.id) {
+        for (let i = 0; i < pendingFiles.length; i++) {
+          await uploadImage.mutateAsync({ vehicleId: result.id, file: pendingFiles[i], position: i });
+        }
+      }
       setForm({ ...emptyForm });
+      setPendingFiles([]);
       setAddDialogOpen(false);
       toast({ title: "✅ Veículo adicionado!", description: `${form.brand} ${form.model}` });
     } catch (err: any) {
@@ -335,6 +356,16 @@ const InventoryPage = () => {
         </>
       )}
 
+      {/* Fotos */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-3">Fotos</div>
+      <div className="col-span-2">
+        <VehiclePhotoUpload
+          vehicleId={editingVehicle?.id}
+          pendingFiles={!editingVehicle ? pendingFiles : undefined}
+          onPendingFilesChange={!editingVehicle ? setPendingFiles : undefined}
+        />
+      </div>
+
       {/* Descrição */}
       <div className="col-span-2 space-y-1.5 pt-2">
         <Label className="text-xs">Descrição / Observações</Label>
@@ -350,7 +381,7 @@ const InventoryPage = () => {
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Estoque</h1>
           <p className="text-sm text-muted-foreground mt-1">Gerencie seus veículos disponíveis</p>
         </div>
-        <Button onClick={() => { setForm({ ...emptyForm }); setAddDialogOpen(true); }} className="rounded-xl gap-2 shadow-md">
+        <Button onClick={() => { setForm({ ...emptyForm }); setPendingFiles([]); setAddDialogOpen(true); }} className="rounded-xl gap-2 shadow-md">
           <Plus className="w-4 h-4" /> Novo Veículo
         </Button>
       </div>
@@ -412,7 +443,11 @@ const InventoryPage = () => {
               <motion.div key={vehicle.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03, duration: 0.35 }} className="glass-card group overflow-hidden">
                 <div className="h-44 bg-muted/40 rounded-xl flex items-center justify-center mb-4 overflow-hidden mx-4 mt-4">
-                  <Car className="w-16 h-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-500" />
+                  {imagesByVehicle[vehicle.id] ? (
+                    <img src={imagesByVehicle[vehicle.id]} alt={`${vehicle.brand} ${vehicle.model}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <Car className="w-16 h-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-500" />
+                  )}
                 </div>
                 <div className="px-5 pb-5">
                   <div className="flex items-start justify-between mb-1">
