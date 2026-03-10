@@ -301,6 +301,13 @@ const PipelinePage = () => {
                                       </div>
                                     )}
 
+                                    <button
+                                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-accent/10 text-accent text-xs font-semibold hover:bg-accent/20 transition-colors mb-2"
+                                      onClick={(e) => { e.stopPropagation(); setEditDeal(deal); }}
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" /> Editar Negócio
+                                    </button>
+
                                     <div className="flex gap-2">
                                       {contactPhone && (
                                         <a
