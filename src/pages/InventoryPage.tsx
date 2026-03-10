@@ -81,7 +81,8 @@ function formatPriceDisplay(value: string): string {
   return Number(digits).toLocaleString("pt-BR");
 }
 
-function parsePriceValue(formatted: string): number {
+function parsePriceValue(formatted: string | undefined): number {
+  if (!formatted) return 0;
   const digits = formatted.replace(/\D/g, "");
   return Number(digits) || 0;
 }
