@@ -349,6 +349,8 @@ const PipelinePage = () => {
           })}
         </div>
       </div>
+
+      <NewDealDialog open={newDealOpen} onOpenChange={setNewDealOpen} />
     </div>
   );
 };
