@@ -351,7 +351,7 @@ const InventoryPage = () => {
               <Plus className="w-5 h-5" /> Novo Veículo
             </DialogTitle>
           </DialogHeader>
-          <VehicleFormFields />
+          {vehicleFormFields}
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddDialogOpen(false)} className="rounded-xl">Cancelar</Button>
             <Button onClick={handleAdd} disabled={createVehicle.isPending} className="rounded-xl gap-2">
