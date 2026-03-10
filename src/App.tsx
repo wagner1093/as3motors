@@ -15,7 +15,6 @@ import AdsPage from "@/pages/AdsPage";
 import SettingsPage from "@/pages/SettingsPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/NotFound";
-import ConversationsPage from "@/pages/ConversationsPage";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +28,6 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route element={<AppLayout />}>
             <Route path="/" element={<DashboardPage />} />
-            <Route path="/conversations" element={<ConversationsPage />} />
             <Route path="/inbox" element={<InboxPage />} />
             <Route path="/pipeline" element={<PipelinePage />} />
             <Route path="/estoque" element={<InventoryPage />} />

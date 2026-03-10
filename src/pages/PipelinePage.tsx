@@ -1,436 +1,375 @@
-typescript
-import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import {
-  DndContext,
-  closestCorners,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Car, DollarSign, Clock, CheckCircle, XCircle, Info, Phone, Mail, User, Tag, Calendar, Edit, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { mockDeals as initialDeals, mockConversations, mockVehicles, PIPELINE_STAGES } from "@/data/mockData";
+import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { Phone, Mail, Car, CreditCard, Calendar, Clock, ArrowRightLeft, ChevronRight, Flame, Snowflake, Sun, MessageSquare, MoreHorizontal, Plus, Filter, RotateCcw, GripVertical } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import type { Deal } from "@/types/crm";
 
-// Definições de tipos para o Supabase
-interface Deal {
-  id: string;
-  contact_id: string;
-  vehicle_id?: string;
-  stage: string;
-  value?: number;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  vehicle_interest?: string;
-  payment_type?: string;
-  urgency?: string;
-  notified_at?: string;
-  contact?: Contact; // Adicionado para incluir dados do contato
-}
-
-interface Contact {
-  id: string;
-  name: string;
-  phone?: string;
-  email?: string;
-  source?: string;
-  preferences?: string;
-  notes?: string;
-  created_at: string;
-  whatsapp?: string;
-  lead_source?: string;
-  payment_type?: string;
-  urgency?: string;
-  vehicle_interest?: string;
-  status?: string;
-}
-
-interface Stage {
-  key: string;
-  label: string;
-  color: string;
-}
-
-const PIPELINE_STAGES: Stage[] = [
-  { key: 'collecting', label: 'Coletando', color: 'bg-gray-500' },
-  { key: 'interested', label: 'Interessados', color: 'bg-blue-500' },
-  { key: 'hot_lead', label: 'Hot Leads', color: 'bg-orange-500' },
-  { key: 'negotiation', label: 'Negociação', color: 'bg-purple-500' },
-  { key: 'closed_won', label: 'Fechado Ganho', color: 'bg-green-500' },
-  { key: 'closed_lost', label: 'Fechado Perdido', color: 'bg-red-500' },
-];
-
-// Componente SortableItem
-const SortableItem: React.FC<{ deal: Deal; onEdit: (deal: Deal) => void; onDelete: (id: string) => void }> = ({ deal, onEdit, onDelete }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: deal.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const interestConfig = useCallback((interest: string | undefined) => {
-    if (!interest) return { icon: , color: 'bg-gray-500' };
-    if (interest.includes('financiamento')) return { icon: , color: 'bg-blue-500' };
-    if (interest.includes('a_vista')) return { icon: , color: 'bg-green-500' };
-    return { icon: , color: 'bg-gray-500' };
-  }, []);
-
-  const urgencyConfig = useCallback((urgency: string | undefined) => {
-    if (!urgency) return { icon: , color: 'text-gray-600' };
-    if (urgency === 'high') return { icon: , color: 'text-red-600' };
-    if (urgency === 'medium') return { icon: , color: 'text-orange-600' };
-    return { icon: , color: 'text-blue-600' };
-  }, []);
-
-  const currentInterest = interestConfig(deal.payment_type);
-  const currentUrgency = urgencyConfig(deal.urgency);
-
-  return (
-    
-      
-        
-          
-          {deal.contact?.name || 'Contato Desconhecido'}
-        
-        
-          
-            
-              
-            
-          
-          
-             onEdit(deal)}>
-               Editar
-            
-             onDelete(deal.id)}>
-               Excluir
-            
-          
-        
-      
-      
-        R$ {deal.value?.toLocaleString('pt-BR') || '0,00'}
-        
-          {currentInterest.icon} {deal.vehicle_interest || 'Sem interesse'}
-        
-        
-          {currentUrgency.icon} Urgência: {deal.urgency || 'Não definida'}
-        
-        
-           {format(new Date(deal.created_at), 'dd/MM/yyyy')}
-        
-      
-    
-  );
+const paymentLabels: Record<string, string> = {
+  a_vista: "À Vista",
+  financiamento: "Financiamento",
+  troca: "Troca",
+  misto: "Misto",
+  indefinido: "Indefinido",
 };
 
-// Componente PipelineColumn
-const PipelineColumn: React.FC<{ stage: Stage; deals: Deal[]; onEdit: (deal: Deal) => void; onDelete: (id: string) => void; onStageChange: (dealId: string, newStage: string) => void }> = ({ stage, deals, onEdit, onDelete, onStageChange }) => {
-  return (
-    
-      
-        {stage.label} ({deals.length})
-      
-       d.id)} strategy={verticalListSortingStrategy}>
-        {deals.map((deal) => (
-          
-            
-            
-              
-                
-                  Mover para...
-                
-              
-              
-                {PIPELINE_STAGES.filter(s => s.key !== stage.key).map(s => (
-                   onStageChange(deal.id, s.key)}>
-                    {s.label}
-                  
-                ))}
-              
-            
-          
-        ))}
-      
-    
-  );
-};
+const PipelinePage = () => {
+  const [deals, setDeals] = useState<Deal[]>(initialDeals);
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [draggedDeal, setDraggedDeal] = useState<string | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-// Componente principal PipelinePage
-const PipelinePage: React.FC = () => {
-  const [deals, setDeals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentDeal, setCurrentDeal] = useState(null);
+  const getDealData = (deal: Deal) => {
+    const conv = mockConversations.find(c => c.id === deal.conversation_id);
+    const vehicle = deal.vehicle_interest_id ? mockVehicles.find(v => v.id === deal.vehicle_interest_id) : null;
+    return { conv, vehicle };
+  };
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const interestConfig = (label: string) => {
+    if (label === "hot") return { icon: Flame, text: "Quente", className: "lead-badge-hot" };
+    if (label === "warm") return { icon: Sun, text: "Morno", className: "lead-badge-warm" };
+    return { icon: Snowflake, text: "Frio", className: "lead-badge-cold" };
+  };
 
-  const fetchDeals = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data: dealsData, error: dealsError } = await supabase
-        .from('deals')
-        .select(`
-          *,
-          contact (
-            id, name, phone, email, whatsapp
-          )
-        `);
+  const stageTotal = (stageKey: string) => {
+    return deals
+      .filter(d => d.stage === stageKey)
+      .reduce((sum, d) => {
+        const v = d.vehicle_interest_id ? mockVehicles.find(v => v.id === d.vehicle_interest_id) : null;
+        return sum + (v?.price || 0);
+      }, 0);
+  };
 
-      if (dealsError) throw dealsError;
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, dealId: string) => {
+    setDraggedDeal(dealId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", dealId);
+  };
 
-      setDeals(dealsData as Deal[]);
-    } catch (err: any) {
-      console.error('Erro ao buscar deals:', err.message);
-      setError('Erro ao carregar os negócios. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const handleDragOver = (e: React.DragEvent, stageKey: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverStage(stageKey);
+  };
 
-  useEffect(() => {
-    fetchDeals();
+  const handleDragLeave = () => {
+    setDragOverStage(null);
+  };
 
-    // Realtime subscription
-    const channel = supabase
-      .channel('public:deals')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, payload => {
-        console.log('Change received!', payload);
-        fetchDeals(); // Re-fetch all deals on any change
-      })
-      .subscribe();
+  const handleDrop = (e: React.DragEvent, targetStage: string) => {
+    e.preventDefault();
+    const dealId = e.dataTransfer.getData("text/plain");
+    if (!dealId) return;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchDeals]);
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over) return;
-
-    const dealId = active.id as string;
-    const newStage = over.id as string; // Assuming over.id is the stage key
-
-    const dealToUpdate = deals.find(d => d.id === dealId);
-    if (dealToUpdate && dealToUpdate.stage !== newStage) {
-      // Optimistic update
-      setDeals(prevDeals =>
-        prevDeals.map(deal =>
-          deal.id === dealId ? { ...deal, stage: newStage } : deal
-        )
-      );
-
-      try {
-        const { error } = await supabase
-          .from('deals')
-          .update({ stage: newStage, updated_at: new Date().toISOString() })
-          .eq('id', dealId);
-
-        if (error) throw error;
-      } catch (err: any) {
-        console.error('Erro ao atualizar stage do deal:', err.message);
-        setError('Erro ao mover o negócio. Desfazendo a alteração.');
-        // Revert optimistic update on error
-        setDeals(prevDeals =>
-          prevDeals.map(deal =>
-            deal.id === dealId ? { ...deal, stage: dealToUpdate.stage } : deal
-          )
-        );
+    setDeals(prev => prev.map(d => {
+      if (d.id === dealId && d.stage !== targetStage) {
+        const conv = mockConversations.find(c => c.id === d.conversation_id);
+        const stageLabel = PIPELINE_STAGES.find(s => s.key === targetStage)?.label || targetStage;
+        toast({
+          title: `Movido para ${stageLabel}`,
+          description: conv?.contact.full_name || "",
+        });
+        return { ...d, stage: targetStage };
       }
-    }
+      return d;
+    }));
+    setDraggedDeal(null);
+    setDragOverStage(null);
   };
 
-  const handleEditDeal = (deal: Deal) => {
-    setCurrentDeal(deal);
-    setIsModalOpen(true);
+  const handleDragEnd = () => {
+    setDraggedDeal(null);
+    setDragOverStage(null);
   };
 
-  const handleDeleteDeal = async (dealId: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir este negócio?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('deals')
-        .delete()
-        .eq('id', dealId);
-
-      if (error) throw error;
-
-      setDeals(prevDeals => prevDeals.filter(deal => deal.id !== dealId));
-    } catch (err: any) {
-      console.error('Erro ao excluir deal:', err.message);
-      setError('Erro ao excluir o negócio. Tente novamente.');
-    }
-  };
-
-  const handleSaveDeal = async () => {
-    if (!currentDeal) return;
-
-    try {
-      const { error } = await supabase
-        .from('deals')
-        .update({
-          value: currentDeal.value,
-          notes: currentDeal.notes,
-          payment_type: currentDeal.payment_type,
-          vehicle_interest: currentDeal.vehicle_interest,
-          urgency: currentDeal.urgency,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', currentDeal.id);
-
-      if (error) throw error;
-
-      setIsModalOpen(false);
-      setCurrentDeal(null);
-      fetchDeals(); // Re-fetch to ensure data consistency
-    } catch (err: any) {
-      console.error('Erro ao salvar deal:', err.message);
-      setError('Erro ao salvar o negócio. Tente novamente.');
-    }
-  };
-
-  const handleStageChange = async (dealId: string, targetStage: string) => {
-    const dealToUpdate = deals.find(d => d.id === dealId);
-    if (dealToUpdate && dealToUpdate.stage !== targetStage) {
-      setDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: targetStage } : d));
-      try {
-        const { error } = await supabase.from('deals').update({ stage: targetStage, updated_at: new Date().toISOString() }).eq('id', dealId);
-        if (error) throw error;
-      } catch (err: any) {
-        console.error('Erro ao atualizar stage do deal via dropdown:', err.message);
-        setError('Erro ao mover o negócio. Desfazendo a alteração.');
-        setDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: dealToUpdate.stage } : d));
-      }
-    }
-  };
-
-  if (loading) {
-    return Carregando pipeline...;
-  }
-
-  if (error) {
-    return {error};
-  }
+  const totalDeals = deals.length;
+  const totalValue = deals.reduce((sum, d) => {
+    const v = d.vehicle_interest_id ? mockVehicles.find(v => v.id === d.vehicle_interest_id) : null;
+    return sum + (v?.price || 0);
+  }, 0);
 
   return (
-    
-      Pipeline de Vendas
-      
-        
-          {PIPELINE_STAGES.map((stage) => (
-             deal.stage === stage.key)}
-              onEdit={handleEditDeal}
-              onDelete={handleDeleteDeal}
-              onStageChange={handleStageChange}
-            />
-          ))}
-        
+    <div className="relative flex flex-col min-w-0 overflow-hidden h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
+      {/* Header */}
+      <div className="shrink-0 pb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Pipeline</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {totalDeals} negócios · R$ {(totalValue / 1000).toFixed(0)}k em pipeline
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            className="filter-pill flex items-center gap-2"
+            onClick={() => toast({ title: "Filtros", description: "Funcionalidade de filtros será conectada ao backend." })}
+          >
+            <Filter className="w-4 h-4" />
+            Filtrar
+          </button>
+          <button
+            className="filter-pill active flex items-center gap-2"
+            onClick={() => toast({ title: "Novo Negócio", description: "Vá até a Inbox e inicie uma conversa para criar um negócio." })}
+          >
+            <Plus className="w-4 h-4" />
+            Novo Negócio
+          </button>
+        </div>
+      </div>
 
-        {/* Modal de Edição de Negócio */}
-        
-          
-            
-              Editar Negócio
-            
-            {currentDeal && (
-              
-                
-                  
-                    Contato
-                  
-                  
-                
-                
-                  
-                    Valor
-                  
-                  
-                      setCurrentDeal({ ...currentDeal, value: parseFloat(e.target.value) || 0 })
-                    }
-                    className="col-span-3"
-                  />
-                
-                
-                  
-                    Interesse Veículo
-                  
-                  
-                      setCurrentDeal({ ...currentDeal, vehicle_interest: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                
-                
-                  
-                    Pagamento
-                  
-                  
-                      setCurrentDeal({ ...currentDeal, payment_type: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                
-                
-                  
-                    Urgência
-                  
-                  
-                      setCurrentDeal({ ...currentDeal, urgency: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                
-                
-                  
-                    Notas
-                  
-                                        setCurrentDeal({ ...currentDeal, notes: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
+      {/* Scrollable Kanban */}
+      <div className="flex-1 min-w-0 overflow-x-auto overflow-y-hidden -mx-6 lg:-mx-8 px-6 lg:px-8">
+        <div className="flex gap-4 h-full pb-4" style={{ minWidth: "fit-content" }}>
+          {PIPELINE_STAGES.map((stage, stageIdx) => {
+            const stageDeals = deals.filter(d => d.stage === stage.key);
+            const total = stageTotal(stage.key);
+            const isDragOver = dragOverStage === stage.key;
+
+            return (
+              <div
+                key={stage.key}
+                className={cn(
+                  "rounded-2xl p-4 flex flex-col transition-all duration-200",
+                  isDragOver
+                    ? "bg-accent/10 ring-2 ring-accent/30"
+                    : "bg-muted/70",
+                )}
+                style={{ width: 340, minWidth: 340, maxHeight: "100%" }}
+                onDragOver={(e) => handleDragOver(e, stage.key)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, stage.key)}
+              >
+                {/* Column Header */}
+                <div className="flex items-center justify-between mb-4 px-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-foreground">{stage.label}</h3>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-background text-muted-foreground border border-border">
+                      {stageDeals.length}
+                    </span>
+                  </div>
+                  {total > 0 && (
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      R$ {(total / 1000).toFixed(0)}k
+                    </span>
+                  )}
+                </div>
+
+                {/* Scrollable Cards */}
+                <div className="flex-1 overflow-y-auto space-y-3 pr-1" style={{ scrollbarWidth: "thin" }}>
+                  <AnimatePresence mode="popLayout">
+                    {stageDeals.map((deal, i) => {
+                      const { conv, vehicle } = getDealData(deal);
+                      if (!conv) return null;
+                      const interest = interestConfig(conv.ai_interest_label);
+                      const InterestIcon = interest.icon;
+                      const isExpanded = expandedCard === deal.id;
+                      const isDragging = draggedDeal === deal.id;
+
+                      return (
+                        <motion.div
+                          key={deal.id}
+                          layout
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: isDragging ? 0.5 : 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, deal.id)}
+                          onDragEnd={handleDragEnd}
+                          className={cn(
+                            "kanban-card group relative",
+                            isDragging && "opacity-50 ring-2 ring-accent",
+                          )}
+                          onClick={() => setExpandedCard(isExpanded ? null : deal.id)}
+                        >
+                          {/* Drag Handle */}
+                          <div className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-40 transition-opacity cursor-grab active:cursor-grabbing">
+                            <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                          </div>
+
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-sm font-semibold text-foreground border border-border">
+                                {conv.contact.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm">{conv.contact.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{conv.contact.phone_e164}</p>
+                              </div>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-secondary"
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => navigate(`/inbox?conv=${conv.id}`)}>
+                                  <MessageSquare className="w-4 h-4 mr-2" /> Abrir conversa
+                                </DropdownMenuItem>
+                                {PIPELINE_STAGES.filter(s => s.key !== deal.stage).map(s => (
+                                  <DropdownMenuItem key={s.key} onClick={() => {
+                                    setDeals(prev => prev.map(d => d.id === deal.id ? { ...d, stage: s.key } : d));
+                                    toast({ title: `Movido para ${s.label}`, description: conv.contact.full_name });
+                                  }}>
+                                    Mover para {s.label}
+                                  </DropdownMenuItem>
+                                ))}
+                                <DropdownMenuItem onClick={() => navigate("/followup")}>
+                                  <RotateCcw className="w-4 h-4 mr-2" /> Iniciar Follow-up
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className={`${interest.className} flex items-center gap-1`}>
+                              <InterestIcon className="w-3 h-3" />
+                              {interest.text}
+                            </span>
+                            <span className="text-xs text-muted-foreground">Score: {conv.ai_interest_score}</span>
+                            {conv.source_channel && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground ml-auto">
+                                {conv.source_channel}
+                              </span>
+                            )}
+                          </div>
+
+                          {vehicle && (
+                            <div
+                              className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/80 mb-3 cursor-pointer hover:bg-secondary transition-colors"
+                              onClick={(e) => { e.stopPropagation(); navigate("/estoque"); }}
+                            >
+                              <Car className="w-4 h-4 text-muted-foreground shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium truncate">
+                                  {vehicle.make} {vehicle.model} {vehicle.year}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground">{vehicle.version} • {vehicle.color}</p>
+                              </div>
+                              <span className="text-sm font-bold whitespace-nowrap">
+                                R$ {(vehicle.price / 1000).toFixed(0)}k
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-[11px] font-medium gap-1">
+                              <CreditCard className="w-3 h-3" />
+                              {paymentLabels[deal.payment_type] || deal.payment_type}
+                            </Badge>
+                            {deal.tradein_description && (
+                              <Badge variant="outline" className="text-[11px] font-medium gap-1">
+                                <ArrowRightLeft className="w-3 h-3" />
+                                Troca
+                              </Badge>
+                            )}
+                          </div>
+
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="mt-3 pt-3 border-t space-y-3">
+                                  <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
+                                    <p className="text-[11px] font-semibold text-accent-foreground mb-1 flex items-center gap-1">
+                                      <MessageSquare className="w-3 h-3" /> Resumo IA
+                                    </p>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">{conv.ai_summary}</p>
+                                  </div>
+
+                                  {deal.tradein_description && (
+                                    <div className="text-xs space-y-1">
+                                      <p className="font-medium flex items-center gap-1">
+                                        <ArrowRightLeft className="w-3 h-3 text-muted-foreground" />
+                                        Veículo na troca
+                                      </p>
+                                      <p className="text-muted-foreground pl-4">{deal.tradein_description}</p>
+                                      {deal.tradein_value_expected && (
+                                        <p className="font-semibold pl-4">Valor esperado: R$ {deal.tradein_value_expected.toLocaleString("pt-BR")}</p>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  <div className="flex gap-2">
+                                    <a
+                                      href={`tel:${conv.contact.phone_e164}`}
+                                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
+                                      onClick={e => e.stopPropagation()}
+                                    >
+                                      <Phone className="w-3.5 h-3.5" /> Ligar
+                                    </a>
+                                    <button
+                                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
+                                      onClick={(e) => { e.stopPropagation(); navigate(`/inbox?conv=${conv.id}`); }}
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5" /> Chat
+                                    </button>
+                                    {conv.contact.email && (
+                                      <a
+                                        href={`mailto:${conv.contact.email}`}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-secondary text-xs font-medium hover:bg-muted transition-colors"
+                                        onClick={e => e.stopPropagation()}
+                                      >
+                                        <Mail className="w-3.5 h-3.5" /> Email
+                                      </a>
+                                    )}
+                                  </div>
+
+                                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    Última msg: {format(new Date(conv.last_message_at), "dd MMM, HH:mm", { locale: ptBR })}
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          {deal.next_action && (
+                            <div className="mt-3 pt-3 border-t flex items-start gap-2">
+                              <Calendar className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-[11px] text-foreground font-medium">{deal.next_action}</p>
+                                {deal.next_action_at && (
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    {format(new Date(deal.next_action_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                  </p>
+                                )}
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            </div>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                  {stageDeals.length === 0 && (
+                    <div className="text-center py-8 text-xs text-muted-foreground rounded-xl border-2 border-dashed border-border/50">
+                      Arraste um card aqui
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSaveDeal}>Salvar Alterações</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </DndContext>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
