@@ -24,6 +24,17 @@ export interface SupabaseVehicle {
   armor_company: string | null;
   glass_brand: string | null;
   created_at: string | null;
+  // Financial / internal
+  purchase_price: number | null;
+  commission_as3: number | null;
+  commission_external: number | null;
+  commission_armor: number | null;
+  commission_financing: number | null;
+  cost_repairs: number | null;
+  cost_detailing: number | null;
+  cost_documentation: number | null;
+  cost_other: number | null;
+  notes_internal: string | null;
 }
 
 export function useAllVehicles() {
@@ -67,6 +78,16 @@ export function useCreateVehicle() {
           armor_type: params.armor_type || null,
           armor_company: params.armor_company || null,
           glass_brand: params.glass_brand || null,
+          purchase_price: params.purchase_price || null,
+          commission_as3: params.commission_as3 || null,
+          commission_external: params.commission_external || null,
+          commission_armor: params.commission_armor || null,
+          commission_financing: params.commission_financing || null,
+          cost_repairs: params.cost_repairs || null,
+          cost_detailing: params.cost_detailing || null,
+          cost_documentation: params.cost_documentation || null,
+          cost_other: params.cost_other || null,
+          notes_internal: params.notes_internal || null,
         })
         .select("id")
         .single();
