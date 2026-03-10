@@ -4,7 +4,7 @@ import { useDeals, useUpdateDealStage, DealWithRelations } from "@/hooks/useDeal
 import { PIPELINE_STAGES } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, Mail, Car, CreditCard, Calendar, Clock, ChevronRight, MessageSquare, MoreHorizontal, Plus, Filter, GripVertical } from "lucide-react";
+import { Phone, Mail, Car, CreditCard, Calendar, Clock, ChevronRight, MessageSquare, MoreHorizontal, Plus, Filter, GripVertical, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
