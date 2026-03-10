@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAllVehicles, useCreateVehicle, useEditVehicle, useDeleteVehicle, SupabaseVehicle } from "@/hooks/useVehicles";
+import { useAllVehicleImages, useUploadVehicleImage } from "@/hooks/useVehicleImages";
+import { VehiclePhotoUpload } from "@/components/VehiclePhotoUpload";
 import {
   Search, Car, Plus, Edit, Trash2, MoreHorizontal, DollarSign, Gauge, Palette, Calendar,
   Shield, FileText, ExternalLink, Fuel, Zap, Armchair
