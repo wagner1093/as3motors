@@ -91,3 +91,22 @@ export function useDeleteVehicleImage() {
     },
   });
 }
+
+export function useReorderVehicleImages() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (updates: { id: string; position: number }[]) => {
+      for (const u of updates) {
+        const { error } = await supabase
+          .from("vehicle_images")
+          .update({ position: u.position })
+          .eq("id", u.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vehicle-images"] });
+      queryClient.invalidateQueries({ queryKey: ["vehicle-images-all"] });
+    },
+  });
+}
