@@ -3,8 +3,8 @@ import { useAllVehicles, useCreateVehicle, useEditVehicle, useDeleteVehicle, Sup
 import { useAllVehicleImages, useUploadVehicleImage } from "@/hooks/useVehicleImages";
 import { VehiclePhotoUpload } from "@/components/VehiclePhotoUpload";
 import {
-  Search, Car, Plus, Edit, Trash2, MoreHorizontal, DollarSign, Gauge, Palette, Calendar,
-  Shield, FileText, ExternalLink, Fuel, Zap, Armchair
+  Search, Car, Plus, Edit, Trash2, MoreHorizontal, DollarSign, Gauge, Palette,
+  Shield, FileText, ExternalLink, Fuel, Banknote, Receipt, Wrench, Sparkles, FileCheck, StickyNote
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,6 +52,17 @@ interface VehicleForm {
   armor_type: string;
   armor_company: string;
   glass_brand: string;
+  // Financial
+  purchase_price: string;
+  commission_as3: string;
+  commission_external: string;
+  commission_armor: string;
+  commission_financing: string;
+  cost_repairs: string;
+  cost_detailing: string;
+  cost_documentation: string;
+  cost_other: string;
+  notes_internal: string;
 }
 
 const emptyForm: VehicleForm = {
@@ -58,19 +70,35 @@ const emptyForm: VehicleForm = {
   price: "", status: "available", description: "", condition: "", engine: "",
   power: "", leather_seats: false, sunroof: false, electric_trunk: false,
   fuel: "", armored: false, armor_type: "", armor_company: "", glass_brand: "",
+  purchase_price: "", commission_as3: "", commission_external: "",
+  commission_armor: "", commission_financing: "", cost_repairs: "",
+  cost_detailing: "", cost_documentation: "", cost_other: "", notes_internal: "",
 };
 
-// Format price string: "1500000" -> "1.500.000"
 function formatPriceDisplay(value: string): string {
   const digits = value.replace(/\D/g, "");
   if (!digits) return "";
   return Number(digits).toLocaleString("pt-BR");
 }
 
-// Parse formatted price back to number
 function parsePriceValue(formatted: string): number {
   const digits = formatted.replace(/\D/g, "");
   return Number(digits) || 0;
+}
+
+/** Reusable R$ input */
+function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+      <Input
+        placeholder={placeholder || "0"}
+        value={formatPriceDisplay(value)}
+        onChange={e => onChange(e.target.value.replace(/\D/g, ""))}
+        className="rounded-xl pl-9"
+      />
+    </div>
+  );
 }
 
 const InventoryPage = () => {
@@ -102,8 +130,7 @@ const InventoryPage = () => {
   const updateForm = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }));
 
   const handlePriceChange = (raw: string) => {
-    const digits = raw.replace(/\D/g, "");
-    updateForm("price", digits);
+    updateForm("price", raw.replace(/\D/g, ""));
   };
 
   const filtered = vehicles.filter(v => {
@@ -139,6 +166,16 @@ const InventoryPage = () => {
     armor_type: form.armored ? (form.armor_type.trim() || null) : null,
     armor_company: form.armored ? (form.armor_company.trim() || null) : null,
     glass_brand: form.armored ? (form.glass_brand.trim() || null) : null,
+    purchase_price: form.purchase_price ? parsePriceValue(form.purchase_price) : null,
+    commission_as3: form.commission_as3 ? parsePriceValue(form.commission_as3) : null,
+    commission_external: form.commission_external ? parsePriceValue(form.commission_external) : null,
+    commission_armor: form.commission_armor ? parsePriceValue(form.commission_armor) : null,
+    commission_financing: form.commission_financing ? parsePriceValue(form.commission_financing) : null,
+    cost_repairs: form.cost_repairs ? parsePriceValue(form.cost_repairs) : null,
+    cost_detailing: form.cost_detailing ? parsePriceValue(form.cost_detailing) : null,
+    cost_documentation: form.cost_documentation ? parsePriceValue(form.cost_documentation) : null,
+    cost_other: form.cost_other ? parsePriceValue(form.cost_other) : null,
+    notes_internal: form.notes_internal.trim() || null,
   });
 
   const handleAdd = async () => {
@@ -153,7 +190,6 @@ const InventoryPage = () => {
         model: data.model!,
         ...data,
       });
-      // Upload pending photos
       if (pendingFiles.length > 0 && result?.id) {
         for (let i = 0; i < pendingFiles.length; i++) {
           await uploadImage.mutateAsync({ vehicleId: result.id, file: pendingFiles[i], position: i });
@@ -191,6 +227,16 @@ const InventoryPage = () => {
       armor_type: v.armor_type || "",
       armor_company: v.armor_company || "",
       glass_brand: v.glass_brand || "",
+      purchase_price: v.purchase_price != null ? String(v.purchase_price) : "",
+      commission_as3: v.commission_as3 != null ? String(v.commission_as3) : "",
+      commission_external: v.commission_external != null ? String(v.commission_external) : "",
+      commission_armor: v.commission_armor != null ? String(v.commission_armor) : "",
+      commission_financing: v.commission_financing != null ? String(v.commission_financing) : "",
+      cost_repairs: v.cost_repairs != null ? String(v.cost_repairs) : "",
+      cost_detailing: v.cost_detailing != null ? String(v.cost_detailing) : "",
+      cost_documentation: v.cost_documentation != null ? String(v.cost_documentation) : "",
+      cost_other: v.cost_other != null ? String(v.cost_other) : "",
+      notes_internal: v.notes_internal || "",
     });
     setEditDialogOpen(true);
   };
@@ -228,8 +274,17 @@ const InventoryPage = () => {
     }
   };
 
-  const vehicleFormFields = (
-    <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+  // Calculate totals for the financial summary
+  const totalCosts = parsePriceValue(form.cost_repairs) + parsePriceValue(form.cost_detailing) +
+    parsePriceValue(form.cost_documentation) + parsePriceValue(form.cost_other);
+  const totalCommissions = parsePriceValue(form.commission_as3) + parsePriceValue(form.commission_external) +
+    parsePriceValue(form.commission_armor) + parsePriceValue(form.commission_financing);
+  const salePrice = parsePriceValue(form.price);
+  const purchasePrice = parsePriceValue(form.purchase_price);
+  const estimatedProfit = salePrice - purchasePrice - totalCosts - totalCommissions;
+
+  const vehicleInfoTab = (
+    <div className="grid grid-cols-2 gap-3 pr-1">
       {/* Dados principais */}
       <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-1">Dados do Veículo</div>
       <div className="space-y-1.5">
@@ -253,7 +308,7 @@ const InventoryPage = () => {
         <Input placeholder="Prata" value={form.color} onChange={e => updateForm("color", e.target.value)} className="rounded-xl" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Preço (R$) *</Label>
+        <Label className="text-xs">Preço de Venda (R$) *</Label>
         <Input
           placeholder="1.500.000"
           value={formatPriceDisplay(form.price)}
@@ -369,9 +424,130 @@ const InventoryPage = () => {
       {/* Descrição */}
       <div className="col-span-2 space-y-1.5 pt-2">
         <Label className="text-xs">Descrição / Observações</Label>
-        <Textarea placeholder="Versão, detalhes, comissão, link Drive..." value={form.description} onChange={e => updateForm("description", e.target.value)} className="rounded-xl" rows={3} />
+        <Textarea placeholder="Detalhes visíveis publicamente..." value={form.description} onChange={e => updateForm("description", e.target.value)} className="rounded-xl" rows={3} />
       </div>
     </div>
+  );
+
+  const financialTab = (
+    <div className="grid grid-cols-2 gap-3 pr-1">
+      {/* Resumo financeiro */}
+      <div className="col-span-2 rounded-xl border border-border bg-muted/30 p-4 space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <Receipt className="w-3.5 h-3.5" /> Resumo Financeiro
+        </p>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Preço de Venda:</span>
+            <span className="font-semibold">{salePrice > 0 ? `R$ ${salePrice.toLocaleString("pt-BR")}` : "—"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Preço de Compra:</span>
+            <span className="font-semibold">{purchasePrice > 0 ? `R$ ${purchasePrice.toLocaleString("pt-BR")}` : "—"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Total Custos:</span>
+            <span className="font-semibold text-destructive">{totalCosts > 0 ? `- R$ ${totalCosts.toLocaleString("pt-BR")}` : "—"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Total Comissões:</span>
+            <span className="font-semibold text-destructive">{totalCommissions > 0 ? `- R$ ${totalCommissions.toLocaleString("pt-BR")}` : "—"}</span>
+          </div>
+        </div>
+        <div className="border-t border-border pt-2 flex justify-between text-sm">
+          <span className="font-semibold">Lucro Estimado:</span>
+          <span className={`font-bold text-base ${estimatedProfit >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+            {salePrice > 0 || purchasePrice > 0
+              ? `R$ ${estimatedProfit.toLocaleString("pt-BR")}`
+              : "—"}
+          </span>
+        </div>
+      </div>
+
+      {/* Preço de compra */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2 flex items-center gap-1.5">
+        <Banknote className="w-3.5 h-3.5" /> Valores de Aquisição
+      </div>
+      <div className="col-span-2 space-y-1.5">
+        <Label className="text-xs">Preço de Compra</Label>
+        <MoneyInput value={form.purchase_price} onChange={v => updateForm("purchase_price", v)} placeholder="150.000" />
+      </div>
+
+      {/* Comissões */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-3 flex items-center gap-1.5">
+        <DollarSign className="w-3.5 h-3.5" /> Comissões
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Comissão AS3</Label>
+        <MoneyInput value={form.commission_as3} onChange={v => updateForm("commission_as3", v)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Comissão Externa</Label>
+        <MoneyInput value={form.commission_external} onChange={v => updateForm("commission_external", v)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Comissão Blindagem</Label>
+        <MoneyInput value={form.commission_armor} onChange={v => updateForm("commission_armor", v)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Comissão Financiamento</Label>
+        <MoneyInput value={form.commission_financing} onChange={v => updateForm("commission_financing", v)} />
+      </div>
+
+      {/* Custos */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-3 flex items-center gap-1.5">
+        <Wrench className="w-3.5 h-3.5" /> Custos Operacionais
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs flex items-center gap-1"><Wrench className="w-3 h-3" /> Reparos / Mecânica</Label>
+        <MoneyInput value={form.cost_repairs} onChange={v => updateForm("cost_repairs", v)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs flex items-center gap-1"><Sparkles className="w-3 h-3" /> Estética / Detalhamento</Label>
+        <MoneyInput value={form.cost_detailing} onChange={v => updateForm("cost_detailing", v)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs flex items-center gap-1"><FileCheck className="w-3 h-3" /> Documentação</Label>
+        <MoneyInput value={form.cost_documentation} onChange={v => updateForm("cost_documentation", v)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs flex items-center gap-1"><Receipt className="w-3 h-3" /> Outros Custos</Label>
+        <MoneyInput value={form.cost_other} onChange={v => updateForm("cost_other", v)} />
+      </div>
+
+      {/* Notas internas */}
+      <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-3 flex items-center gap-1.5">
+        <StickyNote className="w-3.5 h-3.5" /> Notas Internas
+      </div>
+      <div className="col-span-2 space-y-1.5">
+        <Textarea
+          placeholder="Anotações internas sobre custos, parceiros, observações financeiras..."
+          value={form.notes_internal}
+          onChange={e => updateForm("notes_internal", e.target.value)}
+          className="rounded-xl"
+          rows={4}
+        />
+      </div>
+    </div>
+  );
+
+  const vehicleFormTabs = (
+    <Tabs defaultValue="info" className="w-full">
+      <TabsList className="grid w-full grid-cols-2 rounded-xl mb-4">
+        <TabsTrigger value="info" className="rounded-xl gap-1.5 text-xs">
+          <Car className="w-3.5 h-3.5" /> Informações do Veículo
+        </TabsTrigger>
+        <TabsTrigger value="financial" className="rounded-xl gap-1.5 text-xs">
+          <DollarSign className="w-3.5 h-3.5" /> Controle Interno
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="info" className="max-h-[55vh] overflow-y-auto">
+        {vehicleInfoTab}
+      </TabsContent>
+      <TabsContent value="financial" className="max-h-[55vh] overflow-y-auto">
+        {financialTab}
+      </TabsContent>
+    </Tabs>
   );
 
   return (
@@ -530,7 +706,7 @@ const InventoryPage = () => {
               <Plus className="w-5 h-5" /> Novo Veículo
             </DialogTitle>
           </DialogHeader>
-          {vehicleFormFields}
+          {vehicleFormTabs}
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddDialogOpen(false)} className="rounded-xl">Cancelar</Button>
             <Button onClick={handleAdd} disabled={createVehicle.isPending} className="rounded-xl gap-2">
@@ -548,7 +724,7 @@ const InventoryPage = () => {
               <Edit className="w-5 h-5" /> Editar Veículo
             </DialogTitle>
           </DialogHeader>
-          {vehicleFormFields}
+          {vehicleFormTabs}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="rounded-xl">Cancelar</Button>
             <Button onClick={handleSaveEdit} disabled={editVehicle.isPending} className="rounded-xl gap-2">
