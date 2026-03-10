@@ -69,6 +69,103 @@ export function useUpdateDealStage() {
   });
 }
 
+export function useUpdateDeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ dealId, data }: { dealId: string; data: {
+      vehicle_id?: string | null;
+      vehicle_interest?: string | null;
+      payment_type?: string | null;
+      urgency?: string | null;
+      value?: number | null;
+      notes?: string | null;
+      stage?: string | null;
+    }}) => {
+      const { error } = await supabase
+        .from("deals")
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq("id", dealId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+    },
+  });
+}
+
+export function useUpdateContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ contactId, data }: { contactId: string; data: {
+      name?: string;
+      phone?: string | null;
+      whatsapp?: string | null;
+      email?: string | null;
+      notes?: string | null;
+      lead_source?: string | null;
+      vehicle_interest?: string | null;
+      payment_type?: string | null;
+      preferences?: string | null;
+    }}) => {
+      const { error } = await supabase
+        .from("contacts")
+        .update(data)
+        .eq("id", contactId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+  });
+}
+
+export function useUpdateVehicle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ vehicleId, data }: { vehicleId: string; data: {
+      brand?: string | null;
+      model?: string | null;
+      year?: number | null;
+      color?: string | null;
+      mileage?: number | null;
+      price?: number | null;
+      status?: string | null;
+      description?: string | null;
+    }}) => {
+      const { error } = await supabase
+        .from("vehicles")
+        .update(data)
+        .eq("id", vehicleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      queryClient.invalidateQueries({ queryKey: ["vehicles-available"] });
+    },
+  });
+}
+
+export function useDeleteDeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (dealId: string) => {
+      const { error } = await supabase
+        .from("deals")
+        .delete()
+        .eq("id", dealId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+    },
+  });
+}
+
 export function useCreateDeal() {
   const queryClient = useQueryClient();
 
