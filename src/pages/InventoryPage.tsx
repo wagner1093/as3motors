@@ -381,7 +381,7 @@ const InventoryPage = () => {
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Estoque</h1>
           <p className="text-sm text-muted-foreground mt-1">Gerencie seus veículos disponíveis</p>
         </div>
-        <Button onClick={() => { setForm({ ...emptyForm }); setAddDialogOpen(true); }} className="rounded-xl gap-2 shadow-md">
+        <Button onClick={() => { setForm({ ...emptyForm }); setPendingFiles([]); setAddDialogOpen(true); }} className="rounded-xl gap-2 shadow-md">
           <Plus className="w-4 h-4" /> Novo Veículo
         </Button>
       </div>
