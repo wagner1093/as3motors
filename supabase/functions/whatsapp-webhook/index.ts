@@ -19,6 +19,19 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("Webhook received:", JSON.stringify(body).substring(0, 500));
 
+    // Forward to n8n webhook
+    const n8nWebhookUrl = "https://agencia-wg1234-n8n.yj3mui.easypanel.host/webhook/as3motors-whatsapp";
+    try {
+      await fetch(n8nWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      console.log("Forwarded to n8n");
+    } catch (n8nErr) {
+      console.error("Error forwarding to n8n:", n8nErr);
+    }
+
     const event = body.event;
 
     // Handle messages.upsert (incoming messages)
