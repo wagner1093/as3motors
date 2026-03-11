@@ -654,7 +654,10 @@ const InventoryPage = () => {
                     </p>
                   )}
 
-                  <div className="flex items-center justify-end mt-4 pt-4 border-t">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 text-xs h-8" onClick={() => handleOpenEdit(vehicle)}>
+                      <Edit className="w-3.5 h-3.5" /> Editar
+                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
