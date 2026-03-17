@@ -69,9 +69,8 @@ export default function StudioIAPage() {
         body: {
           imageBase64: originalImage,
           backgroundDescription: bg?.description || "professional car showroom",
-          brightness,
-          contrast,
-          saturation,
+          format,
+          quality,
         },
       });
 
