@@ -98,9 +98,8 @@ export default function StudioIAPage() {
   const handleReset = () => {
     setOriginalImage(null);
     setProcessedImage(null);
-    setBrightness(0);
-    setContrast(0);
-    setSaturation(0);
+    setFormat("1:1");
+    setQuality("2k");
     setSelectedBg("showroom");
   };
 
