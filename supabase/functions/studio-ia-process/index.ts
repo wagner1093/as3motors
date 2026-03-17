@@ -43,7 +43,14 @@ Your task:
 5. The car should be centered and properly scaled within the scene.
 6. Output in ${formatDesc} at ${qualityDesc}.
 
-CRITICAL: The car must keep its REAL original appearance. The background must be EXACTLY the one provided in Image 2, not an interpretation or similar scene.`;
+IMPORTANT ABOUT FORMAT/CROPPING:
+- Do NOT stretch or deform the background image to fit the aspect ratio.
+- Instead, CROP the background to the required aspect ratio, keeping the most relevant central area visible.
+- For vertical formats (3:4, 9:16), crop the sides of the background and you may slightly zoom in or adjust the car position to fill the frame naturally.
+- For square format (1:1), crop equally from sides or top/bottom as needed.
+- The background must always look natural and undistorted, as if it were a real photo taken in that aspect ratio.
+
+CRITICAL: The car must keep its REAL original appearance. The background must be EXACTLY the one provided in Image 2, not an interpretation or similar scene. Never stretch or deform the background.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
