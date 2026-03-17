@@ -14,6 +14,7 @@ import FollowupPage from "@/pages/FollowupPage";
 import WaitlistPage from "@/pages/WaitlistPage";
 import RepassePage from "@/pages/RepassePage";
 import AdsPage from "@/pages/AdsPage";
+import StudioIAPage from "@/pages/StudioIAPage";
 import SettingsPage from "@/pages/SettingsPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/lista-inteligente" element={<WaitlistPage />} />
               <Route path="/repasse" element={<RepassePage />} />
               <Route path="/ads" element={<AdsPage />} />
+              <Route path="/studio-ia" element={<StudioIAPage />} />
               <Route path="/configuracoes" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

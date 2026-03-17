@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, Users, Repeat, Megaphone, ChevronRight, Sun, Moon, Settings } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, Users, Repeat, Megaphone, ChevronRight, Sun, Moon, Settings, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
@@ -12,6 +12,7 @@ const navItems = [
   { to: "/lista-inteligente", icon: Users, label: "Lista Inteligente" },
   { to: "/repasse", icon: Repeat, label: "Repasse" },
   { to: "/ads", icon: Megaphone, label: "Ads" },
+  { to: "/studio-ia", icon: Sparkles, label: "Estúdio IA" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
 
