@@ -126,6 +126,14 @@ export function useDeleteVehicle() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (vehicleId: string) => {
+      // First unlink any deals referencing this vehicle
+      const { error: unlinkError } = await supabase
+        .from("deals")
+        .update({ vehicle_id: null })
+        .eq("vehicle_id", vehicleId);
+      if (unlinkError) throw unlinkError;
+
+      // Then delete the vehicle
       const { error } = await supabase
         .from("vehicles")
         .delete()
