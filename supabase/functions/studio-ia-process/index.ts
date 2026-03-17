@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { imageBase64, backgroundDescription, brightness, contrast, saturation } = await req.json();
+    const { imageBase64, backgroundDescription, format, quality } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -18,17 +18,18 @@ serve(async (req) => {
     if (!imageBase64) throw new Error("imageBase64 is required");
     if (!backgroundDescription) throw new Error("backgroundDescription is required");
 
-    const brightnessVal = brightness ?? 0;
-    const contrastVal = contrast ?? 0;
-    const saturationVal = saturation ?? 0;
+    const formatMap: Record<string, string> = {
+      "1:1": "square 1:1 aspect ratio",
+      "3:4": "3:4 portrait aspect ratio (Instagram feed)",
+      "9:16": "9:16 vertical aspect ratio (Instagram Stories/Reels)",
+    };
+    const qualityMap: Record<string, string> = {
+      "2k": "2048px on the longest side, high resolution",
+      "4k": "4096px on the longest side, ultra high resolution",
+    };
 
-    let adjustmentPrompt = "";
-    if (brightnessVal > 0) adjustmentPrompt += " Make the image slightly brighter.";
-    if (brightnessVal < 0) adjustmentPrompt += " Make the image slightly darker.";
-    if (contrastVal > 0) adjustmentPrompt += " Increase the contrast slightly.";
-    if (contrastVal < 0) adjustmentPrompt += " Decrease the contrast slightly.";
-    if (saturationVal > 0) adjustmentPrompt += " Make the colors more vibrant and saturated.";
-    if (saturationVal < 0) adjustmentPrompt += " Make the colors less saturated, more muted.";
+    const formatDesc = formatMap[format] || formatMap["1:1"];
+    const qualityDesc = qualityMap[quality] || qualityMap["2k"];
 
     const prompt = `You are a professional automotive photographer. Take this car image and:
 1. Remove the existing background completely
@@ -36,7 +37,8 @@ serve(async (req) => {
 3. Match the lighting of the car to the new background scene - adjust shadows, reflections, and highlights so it looks realistic
 4. Ensure the car looks professionally photographed in this environment with proper perspective and ground contact
 5. Add realistic ground reflections if appropriate for the surface
-${adjustmentPrompt}
+6. Output the image in ${formatDesc} format
+7. Render at ${qualityDesc}
 The final result should look like a professional car advertisement photo.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
