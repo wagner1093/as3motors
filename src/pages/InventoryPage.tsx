@@ -465,13 +465,17 @@ const InventoryPage = () => {
         </div>
       </div>
 
-      {/* Preço de compra */}
+      {/* Preços */}
       <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2 flex items-center gap-1.5">
-        <Banknote className="w-3.5 h-3.5" /> Valores de Aquisição
+        <Banknote className="w-3.5 h-3.5" /> Valores de Compra e Venda
       </div>
-      <div className="col-span-2 space-y-1.5">
-        <Label className="text-xs">Preço de Compra</Label>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Preço de Compra (quanto pagamos)</Label>
         <MoneyInput value={form.purchase_price} onChange={v => updateForm("purchase_price", v)} placeholder="150.000" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Valor de Venda (preço ao cliente)</Label>
+        <MoneyInput value={form.price} onChange={v => updateForm("price", v)} placeholder="200.000" />
       </div>
 
       {/* Comissões */}
