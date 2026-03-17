@@ -10,13 +10,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { imageBase64, backgroundDescription, format, quality } = await req.json();
+    const { imageBase64, backgroundBase64, format, quality } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     if (!imageBase64) throw new Error("imageBase64 is required");
-    if (!backgroundDescription) throw new Error("backgroundDescription is required");
+    if (!backgroundBase64) throw new Error("backgroundBase64 is required");
 
     const formatMap: Record<string, string> = {
       "1:1": "square 1:1 aspect ratio",
@@ -31,15 +31,19 @@ serve(async (req) => {
     const formatDesc = formatMap[format] || formatMap["1:1"];
     const qualityDesc = qualityMap[quality] || qualityMap["2k"];
 
-    const prompt = `You are a professional automotive photographer. Take this car image and:
-1. Remove the existing background completely
-2. Place the car naturally in this scene: ${backgroundDescription}
-3. Match the lighting of the car to the new background scene - adjust shadows, reflections, and highlights so it looks realistic
-4. Ensure the car looks professionally photographed in this environment with proper perspective and ground contact
-5. Add realistic ground reflections if appropriate for the surface
-6. Output the image in ${formatDesc} format
-7. Render at ${qualityDesc}
-The final result should look like a professional car advertisement photo.`;
+    const prompt = `You are given two images:
+- Image 1: A photo of a car (the subject)
+- Image 2: A background scene
+
+Your task:
+1. Extract ONLY the car from Image 1. Preserve the car's EXACT original colors, details, badges, reflections, proportions, and shape with pixel-perfect accuracy. Do NOT change the car's color, model, or any visual detail.
+2. Place the extracted car naturally into the EXACT background shown in Image 2. The final background must look identical to Image 2 - same room, same lighting, same textures, same perspective. Do NOT generate a different or similar background - use the EXACT scene from Image 2.
+3. Match the car's lighting, shadows and reflections to be consistent with the lighting in the background image.
+4. Add realistic ground shadow and reflections beneath the car appropriate for the floor surface shown in the background.
+5. The car should be centered and properly scaled within the scene.
+6. Output in ${formatDesc} at ${qualityDesc}.
+
+CRITICAL: The car must keep its REAL original appearance. The background must be EXACTLY the one provided in Image 2, not an interpretation or similar scene.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -57,6 +61,10 @@ The final result should look like a professional car advertisement photo.`;
               {
                 type: "image_url",
                 image_url: { url: imageBase64 },
+              },
+              {
+                type: "image_url",
+                image_url: { url: backgroundBase64 },
               },
             ],
           },
