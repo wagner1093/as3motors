@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Sparkles, Download, RotateCcw, ImageIcon, SunMedium, Contrast, Palette, Loader2, X, Check } from "lucide-react";
+import { Upload, Sparkles, Download, RotateCcw, ImageIcon, Loader2, Check, RectangleHorizontal, Smartphone, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
@@ -26,9 +26,8 @@ export default function StudioIAPage() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [selectedBg, setSelectedBg] = useState<string>("showroom");
-  const [brightness, setBrightness] = useState(0);
-  const [contrast, setContrast] = useState(0);
-  const [saturation, setSaturation] = useState(0);
+  const [format, setFormat] = useState<string>("1:1");
+  const [quality, setQuality] = useState<string>("2k");
   const [processing, setProcessing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,9 +69,8 @@ export default function StudioIAPage() {
         body: {
           imageBase64: originalImage,
           backgroundDescription: bg?.description || "professional car showroom",
-          brightness,
-          contrast,
-          saturation,
+          format,
+          quality,
         },
       });
 
@@ -100,9 +98,8 @@ export default function StudioIAPage() {
   const handleReset = () => {
     setOriginalImage(null);
     setProcessedImage(null);
-    setBrightness(0);
-    setContrast(0);
-    setSaturation(0);
+    setFormat("1:1");
+    setQuality("2k");
     setSelectedBg("showroom");
   };
 
@@ -275,56 +272,51 @@ export default function StudioIAPage() {
           >
             {/* Adjustments */}
             <div className="glass-card p-5 space-y-5">
-              <h3 className="text-sm font-semibold text-foreground">Ajustes</h3>
+              <h3 className="text-sm font-semibold text-foreground">Formato</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "1:1", label: "1×1", desc: "Quadrado", icon: Square },
+                  { id: "3:4", label: "3×4", desc: "Feed Instagram", icon: RectangleHorizontal },
+                  { id: "9:16", label: "9×16", desc: "Stories / Reels", icon: Smartphone },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setFormat(f.id)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all text-center ${
+                      format === f.id
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-border text-muted-foreground hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <f.icon className="w-5 h-5" />
+                    <span className="text-xs font-semibold">{f.label}</span>
+                    <span className="text-[10px] leading-tight">{f.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <SunMedium className="w-3.5 h-3.5" /> Brilho
-                    </label>
-                    <span className="text-xs font-mono text-muted-foreground">{brightness > 0 ? `+${brightness}` : brightness}</span>
-                  </div>
-                  <Slider
-                    value={[brightness]}
-                    min={-50}
-                    max={50}
-                    step={5}
-                    onValueChange={([v]) => setBrightness(v)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Contrast className="w-3.5 h-3.5" /> Contraste
-                    </label>
-                    <span className="text-xs font-mono text-muted-foreground">{contrast > 0 ? `+${contrast}` : contrast}</span>
-                  </div>
-                  <Slider
-                    value={[contrast]}
-                    min={-50}
-                    max={50}
-                    step={5}
-                    onValueChange={([v]) => setContrast(v)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Palette className="w-3.5 h-3.5" /> Saturação
-                    </label>
-                    <span className="text-xs font-mono text-muted-foreground">{saturation > 0 ? `+${saturation}` : saturation}</span>
-                  </div>
-                  <Slider
-                    value={[saturation]}
-                    min={-50}
-                    max={50}
-                    step={5}
-                    onValueChange={([v]) => setSaturation(v)}
-                  />
-                </div>
+            {/* Quality */}
+            <div className="glass-card p-5 space-y-5">
+              <h3 className="text-sm font-semibold text-foreground">Qualidade</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "2k", label: "2K", desc: "2048px" },
+                  { id: "4k", label: "4K", desc: "4096px" },
+                ].map((q) => (
+                  <button
+                    key={q.id}
+                    onClick={() => setQuality(q.id)}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
+                      quality === q.id
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-border text-muted-foreground hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <span className="text-sm font-bold">{q.label}</span>
+                    <span className="text-[10px]">{q.desc}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
