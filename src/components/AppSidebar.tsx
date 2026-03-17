@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, Users, Repeat, Megaphone, ChevronRight, Sun, Moon, Settings } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Kanban, Car, RotateCcw, Users, Repeat, Megaphone, ChevronRight, Sun, Moon, Settings, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
