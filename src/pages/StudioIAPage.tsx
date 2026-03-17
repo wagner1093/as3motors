@@ -26,9 +26,8 @@ export default function StudioIAPage() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [selectedBg, setSelectedBg] = useState<string>("showroom");
-  const [brightness, setBrightness] = useState(0);
-  const [contrast, setContrast] = useState(0);
-  const [saturation, setSaturation] = useState(0);
+  const [format, setFormat] = useState<string>("1:1");
+  const [quality, setQuality] = useState<string>("2k");
   const [processing, setProcessing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
