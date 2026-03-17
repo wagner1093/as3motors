@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Sparkles, Download, RotateCcw, ImageIcon, SunMedium, Contrast, Palette, Loader2, X, Check } from "lucide-react";
+import { Upload, Sparkles, Download, RotateCcw, ImageIcon, Loader2, Check, RectangleHorizontal, Smartphone, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
