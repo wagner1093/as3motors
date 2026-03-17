@@ -57,6 +57,24 @@ export default function StudioIAPage() {
     if (file) handleFile(file);
   }, [handleFile]);
 
+  const imageToBase64 = useCallback((imgSrc: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas not supported"));
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg", 0.9));
+      };
+      img.onerror = () => reject(new Error("Failed to load background image"));
+      img.src = imgSrc;
+    });
+  }, []);
+
   const handleProcess = async () => {
     if (!originalImage) return;
     setProcessing(true);
@@ -65,10 +83,12 @@ export default function StudioIAPage() {
     const bg = backgrounds.find(b => b.id === selectedBg);
 
     try {
+      const backgroundBase64 = await imageToBase64(bg?.img || bgShowroom);
+
       const { data, error } = await supabase.functions.invoke("studio-ia-process", {
         body: {
           imageBase64: originalImage,
-          backgroundDescription: bg?.description || "professional car showroom",
+          backgroundBase64,
           format,
           quality,
         },
