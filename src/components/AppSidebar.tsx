@@ -12,6 +12,7 @@ const navItems = [
   { to: "/lista-inteligente", icon: Users, label: "Lista Inteligente" },
   { to: "/repasse", icon: Repeat, label: "Repasse" },
   { to: "/ads", icon: Megaphone, label: "Ads" },
+  { to: "/studio-ia", icon: Sparkles, label: "Estúdio IA" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
 

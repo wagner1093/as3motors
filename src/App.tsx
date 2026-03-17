@@ -39,6 +39,7 @@ const App = () => (
               <Route path="/lista-inteligente" element={<WaitlistPage />} />
               <Route path="/repasse" element={<RepassePage />} />
               <Route path="/ads" element={<AdsPage />} />
+              <Route path="/studio-ia" element={<StudioIAPage />} />
               <Route path="/configuracoes" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
