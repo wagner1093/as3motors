@@ -148,17 +148,22 @@ const InboxPage = () => {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold shrink-0">
-                    {getInitials(conv.contact?.name || "?")}
+                  <div className="relative w-11 h-11 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold shrink-0">
+                    {getInitials(getContactName(conv))}
+                    {conv.unread_count > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center">
+                        {conv.unread_count > 99 ? "99+" : conv.unread_count}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">
-                        {conv.contact?.name || "Desconhecido"}
+                      <span className={`font-medium text-sm ${conv.unread_count > 0 ? "font-semibold" : ""}`}>
+                        {getContactName(conv)}
                       </span>
                       {getStatusBadge(conv.status)}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mt-1">
+                    <p className={`text-xs truncate mt-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                       {conv.last_message || "Sem mensagens"}
                     </p>
                     <div className="flex items-center gap-2 mt-1.5">
