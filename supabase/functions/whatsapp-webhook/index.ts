@@ -65,18 +65,18 @@ Deno.serve(async (req) => {
       const direction = fromMe ? "outbound" : "inbound";
       const senderName = message.pushName || phone;
 
-      // Find or create contact
+      // Find or create contact - search by phone or whatsapp
       let { data: contact } = await supabase
         .from("contacts")
-        .select("id")
-        .eq("phone", phone)
+        .select("id, name")
+        .or(`phone.eq.${phone},whatsapp.eq.${phone}`)
         .maybeSingle();
 
       if (!contact) {
         const { data: newContact, error: contactErr } = await supabase
           .from("contacts")
           .insert({ name: senderName, phone, whatsapp: phone, source: "whatsapp" })
-          .select("id")
+          .select("id, name")
           .single();
 
         if (contactErr) {
@@ -86,11 +86,11 @@ Deno.serve(async (req) => {
         contact = newContact;
       }
 
-      // Find or create conversation
+      // Find conversation by contact_id OR by phone
       let { data: conversation } = await supabase
         .from("conversations")
         .select("id")
-        .eq("contact_id", contact.id)
+        .or(`contact_id.eq.${contact.id},phone.eq.${phone}`)
         .eq("channel", "whatsapp")
         .maybeSingle();
 
