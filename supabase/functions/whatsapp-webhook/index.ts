@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
           .from("conversations")
           .insert({
             contact_id: contact.id,
+            phone,
             channel: "whatsapp",
             status: "open",
             last_message: messageContent,
@@ -113,10 +114,12 @@ Deno.serve(async (req) => {
         }
         conversation = newConv;
       } else {
-        // Update conversation with latest message
+        // Update conversation with latest message and ensure contact_id/phone are set
         await supabase
           .from("conversations")
           .update({
+            contact_id: contact.id,
+            phone,
             last_message: messageContent,
             last_message_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
