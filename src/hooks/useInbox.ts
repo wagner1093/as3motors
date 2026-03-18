@@ -76,7 +76,29 @@ export function useInbox() {
       last_message: c.last_message,
       last_message_at: c.last_message_at,
       created_at: c.created_at,
+      phone: c.phone,
+      unread_count: 0,
     }));
+
+    // Fetch unread counts for all conversations
+    const convIds = mapped.map((c) => c.id);
+    if (convIds.length > 0) {
+      const { data: msgData } = await supabase
+        .from("messages")
+        .select("conversation_id")
+        .in("conversation_id", convIds)
+        .eq("direction", "inbound");
+
+      if (msgData) {
+        const countMap: Record<string, number> = {};
+        msgData.forEach((m: any) => {
+          countMap[m.conversation_id] = (countMap[m.conversation_id] || 0) + 1;
+        });
+        mapped.forEach((c) => {
+          c.unread_count = countMap[c.id] || 0;
+        });
+      }
+    }
 
     setConversations(mapped);
     setLoading(false);
