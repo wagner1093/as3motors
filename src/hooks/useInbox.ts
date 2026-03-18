@@ -22,6 +22,8 @@ export interface InboxConversation {
   last_message: string | null;
   last_message_at: string | null;
   created_at: string | null;
+  phone: string | null;
+  unread_count: number;
 }
 
 export interface InboxMessage {
