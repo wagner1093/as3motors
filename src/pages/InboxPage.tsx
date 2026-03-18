@@ -193,12 +193,12 @@ const InboxPage = () => {
             <div className="p-4 border-b glass-panel flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold">
-                  {getInitials(selected.contact?.name || "?")}
+                  {getInitials(getContactName(selected))}
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">{selected.contact?.name || "Desconhecido"}</p>
+                  <p className="font-semibold text-sm">{getContactName(selected)}</p>
                   <p className="text-xs text-muted-foreground">
-                    {selected.contact?.phone || selected.contact?.whatsapp || "Sem número"}
+                    {getContactPhone(selected) || "Sem número"}
                   </p>
                 </div>
               </div>
