@@ -36,9 +36,15 @@ const InboxPage = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedId, messages]);
 
+  const getContactName = (conv: typeof conversations[0]) =>
+    conv.contact?.name || conv.phone || "Desconhecido";
+
+  const getContactPhone = (conv: typeof conversations[0]) =>
+    conv.contact?.phone || conv.contact?.whatsapp || conv.phone || "";
+
   const filtered = conversations.filter((c) => {
-    const contactName = c.contact?.name || "";
-    const contactPhone = c.contact?.phone || "";
+    const contactName = getContactName(c);
+    const contactPhone = getContactPhone(c);
     const matchSearch =
       contactName.toLowerCase().includes(search.toLowerCase()) ||
       contactPhone.includes(search);
