@@ -36,9 +36,15 @@ const InboxPage = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedId, messages]);
 
+  const getContactName = (conv: typeof conversations[0]) =>
+    conv.contact?.name || conv.phone || "Desconhecido";
+
+  const getContactPhone = (conv: typeof conversations[0]) =>
+    conv.contact?.phone || conv.contact?.whatsapp || conv.phone || "";
+
   const filtered = conversations.filter((c) => {
-    const contactName = c.contact?.name || "";
-    const contactPhone = c.contact?.phone || "";
+    const contactName = getContactName(c);
+    const contactPhone = getContactPhone(c);
     const matchSearch =
       contactName.toLowerCase().includes(search.toLowerCase()) ||
       contactPhone.includes(search);
@@ -142,17 +148,22 @@ const InboxPage = () => {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold shrink-0">
-                    {getInitials(conv.contact?.name || "?")}
+                  <div className="relative w-11 h-11 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold shrink-0">
+                    {getInitials(getContactName(conv))}
+                    {conv.unread_count > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center">
+                        {conv.unread_count > 99 ? "99+" : conv.unread_count}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">
-                        {conv.contact?.name || "Desconhecido"}
+                      <span className={`font-medium text-sm ${conv.unread_count > 0 ? "font-semibold" : ""}`}>
+                        {getContactName(conv)}
                       </span>
                       {getStatusBadge(conv.status)}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mt-1">
+                    <p className={`text-xs truncate mt-1 ${conv.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                       {conv.last_message || "Sem mensagens"}
                     </p>
                     <div className="flex items-center gap-2 mt-1.5">
@@ -182,12 +193,12 @@ const InboxPage = () => {
             <div className="p-4 border-b glass-panel flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/5 border border-border flex items-center justify-center text-sm font-semibold">
-                  {getInitials(selected.contact?.name || "?")}
+                  {getInitials(getContactName(selected))}
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">{selected.contact?.name || "Desconhecido"}</p>
+                  <p className="font-semibold text-sm">{getContactName(selected)}</p>
                   <p className="text-xs text-muted-foreground">
-                    {selected.contact?.phone || selected.contact?.whatsapp || "Sem número"}
+                    {getContactPhone(selected) || "Sem número"}
                   </p>
                 </div>
               </div>
