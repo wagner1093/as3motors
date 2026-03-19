@@ -97,7 +97,7 @@ const InboxPage = () => {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-[calc(100vh-theme(spacing.20))] -m-6 lg:-m-8">
       {/* Conversation list */}
       <div className="w-[360px] border-r flex flex-col glass-panel">
         <div className="p-4 border-b space-y-3">
