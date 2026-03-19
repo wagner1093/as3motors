@@ -127,25 +127,31 @@ export function useInbox() {
 
       setSending(true);
       try {
-        const { data, error } = await supabase.functions.invoke("whatsapp-send", {
-          body: { conversation_id: selectedId, text: text.trim() },
-        });
+        // Find the conversation to get the phone number
+        const conv = conversations.find((c) => c.id === selectedId);
+        const phone = conv?.contact?.phone || conv?.contact?.whatsapp || conv?.phone || null;
 
-        if (error) throw error;
-
-        // Optimistically add the message
-        const optimisticMsg: InboxMessage = {
-          id: `temp-${Date.now()}`,
+        const { error } = await supabase.from("messages").insert({
           conversation_id: selectedId,
           content: text.trim(),
           direction: "outbound",
           sender: "agent",
-          phone: null,
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, optimisticMsg]);
+          phone,
+        });
 
-        toast({ title: "Mensagem enviada via WhatsApp" });
+        if (error) throw error;
+
+        // Update conversation last_message
+        await supabase
+          .from("conversations")
+          .update({
+            last_message: text.trim(),
+            last_message_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", selectedId);
+
+        toast({ title: "Mensagem enviada" });
       } catch (err: any) {
         console.error("Error sending message:", err);
         toast({
@@ -157,7 +163,7 @@ export function useInbox() {
         setSending(false);
       }
     },
-    [selectedId, toast]
+    [selectedId, conversations, toast]
   );
 
   // Initial fetch
