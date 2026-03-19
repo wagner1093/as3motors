@@ -90,7 +90,7 @@ const InboxPage = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-[calc(100vh-theme(spacing.20))] items-center justify-center">
         <div className="text-muted-foreground">Carregando conversas...</div>
       </div>
     );
